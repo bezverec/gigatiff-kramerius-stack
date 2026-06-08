@@ -1,0 +1,224 @@
+services:
+  kramerius:
+    image: ceskaexpedice/kramerius:7.2.1
+    user: "0"
+    ports:
+      - "127.0.0.1:8088:8080"
+      - "127.0.0.1:5005:5005"
+      - "127.0.0.1:8009:8009"
+    environment:
+      - UMASK=000
+      - HAZELCAST_SERVER_ADDRESSES=lock_server:5701
+      - JAVA_OPTS=-Dfile.encoding=UTF-8 -Xmx4g -Xms4g
+    volumes:
+      - ./server.xml:/usr/local/tomcat/conf/server.xml
+      - ./rewrite.config:/usr/local/tomcat/conf/Catalina/localhost/rewrite.config
+      - ./logging.properties:/usr/local/tomcat/conf/logging.properties
+      - ./mnt/import/.kramerius4:/root/.kramerius4/
+      - ./mnt/imageserver/iip-data/:/mnt/imageserver/iip-data/
+      - ./mnt/imageserver/audioserver/:/mnt/imageserver/audioserver/
+      - ./logs/kramerius:/usr/local/tomcat/logs
+      - ./temp/:/usr/local/tomcat/temp/
+      - /etc/localtime:/etc/localtime:ro
+    restart: "always"
+    depends_on:
+      memcached:
+        condition: service_started
+      solr:
+        condition: service_healthy
+      krameriusPostgres:
+        condition: service_started
+      keycloak_eduid:
+        condition: service_healthy
+      lock_server:
+        condition: service_started
+      processManager:
+        condition: service_started
+
+  krameriusPostgres:
+    image: "postgres:18.4"
+    environment:
+      - POSTGRES_USER=fedoraAdmin
+      - POSTGRES_PASSWORD=fedoraAdmin
+      - POSTGRES_DB=kramerius
+    volumes:
+      - ./mnt/containers/krameriuspostgres18:/var/lib/postgresql
+    ports:
+      - "127.0.0.1:15432:5432"
+    restart: "always"
+
+  memcached:
+    image: memcached:latest
+    command: memcached
+    restart: "always"
+
+  solr:
+    image: solr:10.0.0
+    command: ["solr-foreground", "--user-managed"]
+    environment:
+      - JAVA_OPTS="-Xms4g -Xmx4g"
+      - "SOLR_JAVA_MEM=-Xms4g -Xmx4g"
+    ports:
+      - "127.0.0.1:8983:8983"
+    volumes:
+      - ./mnt/containers/solr/data:/var/solr/data
+      - ./logs/solr:/var/solr/logs
+    restart: "always"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8983/solr/admin/info/system"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  keycloakPostgres_eduid:
+    image: "postgres:14.10"
+    volumes:
+      - ./mnt/containers/keycloakpostgres_eduid:/var/lib/postgresql/data
+    restart: "always"
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+
+  keycloak_eduid:
+    image: ceskaexpedice/keycloak_eduid:22.0.11-1.10
+    volumes:
+      - ./mnt/containers/eduid/providers:/opt/keycloak/providers
+    environment:
+      KEYCLOAK_ADMIN: keycloakAdmin
+      KEYCLOAK_ADMIN_PASSWORD: keycloakAdmin
+      KC_DB: postgres
+      KC_HTTP_PORT: 8990
+      KC_HOSTNAME_URL: http://keycloak.localhost:8990
+      KC_HOSTNAME_ADMIN_URL: http://keycloak.localhost:8990
+      KC_HTTP_ENABLED: true
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_SPI_LOGIN_PROTOCOL_OPENID_CONNECT_LEGACY_LOGOUT_REDIRECT_URI: true
+    ports:
+      - "127.0.0.1:8990:8990"
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+    entrypoint: ["/opt/keycloak/bin/eduid.sh", "start", "--db-url=jdbc:postgresql://keycloakPostgres_eduid:5432/keycloak", "--db-username=keycloak", "--db-password=keycloak", "--proxy=edge"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8990"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: "always"
+    depends_on:
+      - keycloakPostgres_eduid
+
+  lock_server:
+    image: "ceskaexpedice/hazelcast-locks-server:2.0"
+    ports:
+      - "127.0.0.1:5701:5701"
+      - "127.0.0.1:5702:5702"
+      - "127.0.0.1:5703:5703"
+    restart: "always"
+
+  processPostgres:
+    image: "postgres:18.4"
+    environment:
+      - POSTGRES_USER=process
+      - POSTGRES_PASSWORD=process
+      - POSTGRES_DB=process
+    volumes:
+      - ./mnt/containers/processpostgres18:/var/lib/postgresql
+    ports:
+      - "127.0.0.1:25432:5432"
+    restart: "always"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  processManager:
+    image: "ceskaexpedice/process-manager:1.5"
+    depends_on:
+      processPostgres:
+        condition: service_healthy
+    volumes:
+      - ./logs/processmanager:/usr/local/tomcat/logs
+    environment:
+      - JDBC_USERNAME=process
+      - JDBC_PASSWORD=process
+      - JDBC_URL=jdbc:postgresql://processPostgres:5432/process
+    ports:
+      - "127.0.0.1:8082:8080"
+    restart: "always"
+
+  curatorWorker:
+    image: "ceskaexpedice/curator-worker:7.2.1"
+    depends_on:
+      processPostgres:
+        condition: service_healthy
+      processManager:
+        condition: service_started
+    volumes:
+      - ./mnt/import/.kramerius4:/root/.kramerius4/
+      - ./mnt/imageserver/iip-data/:/mnt/imageserver/iip-data/
+      - ./mnt/imageserver/audioserver/:/mnt/imageserver/audioserver/
+      - ./mnt/containers/worker:/root/.processplatform/
+      - ./logs/curatorworker:/usr/local/tomcat/logs
+      - ./temp/:/usr/local/tomcat/temp/
+    environment:
+      - MANAGER_BASE_URL=http://processManager:8080/process-manager/api/
+      - WORKER_BASE_URL=http://curatorWorker:8080/worker/api/
+      - WORKER_LOOP_SLEEP_SEC_KEY=0.3
+      - HAZELCAST_SERVER_ADDRESSES=lock_server:5701
+    ports:
+      - "127.0.0.1:8084:8080"
+    restart: "always"
+
+  publicWorker:
+    image: "ceskaexpedice/public-worker:7.2.1"
+    depends_on:
+      processPostgres:
+        condition: service_healthy
+      processManager:
+        condition: service_started
+    volumes:
+      - ./mnt/import/.kramerius4:/root/.kramerius4/
+      - ./mnt/imageserver/iip-data/:/mnt/imageserver/iip-data/
+      - ./mnt/imageserver/audioserver/:/mnt/imageserver/audioserver/
+      - ./mnt/containers/worker:/root/.processplatform/
+      - ./logs/publicworker:/usr/local/tomcat/logs
+      - ./temp/:/usr/local/tomcat/temp/
+    environment:
+      - MANAGER_BASE_URL=http://processManager:8080/process-manager/api/
+      - WORKER_BASE_URL=http://publicWorker:8080/worker/api/
+    ports:
+      - "127.0.0.1:8086:8080"
+    restart: "always"
+
+  web-client:
+    build:
+      context: .
+      dockerfile: Dockerfile.web-client-gigatiff
+    image: gigatiff-kramerius-web-client:local
+    ports:
+      - "127.0.0.1:1234:80"
+    environment:
+      APP_KRAMERIUS_ID: gigatiff
+    volumes:
+      - ./public/local-config:/usr/share/nginx/local-config:ro
+    depends_on:
+      - kramerius
+
+  admin-client:
+    profiles:
+      - admin
+    build:
+      context: ../kramerius-admin-client
+      dockerfile: Dockerfile.gigatiff
+    image: gigatiff-kramerius-admin-client:local
+    ports:
+      - "127.0.0.1:1235:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - kramerius

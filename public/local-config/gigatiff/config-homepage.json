@@ -1,0 +1,11 @@
+{
+  "title": {
+    "cs": "GigaTIFF localhost",
+    "en": "GigaTIFF localhost"
+  },
+  "subtitle": {
+    "cs": "Lokální Kramerius napojený na GigaTIFF IIIF server.",
+    "en": "Local Kramerius connected to the GigaTIFF IIIF server."
+  },
+  "sections": []
+}

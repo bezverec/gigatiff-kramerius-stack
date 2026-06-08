@@ -1,0 +1,35 @@
+{
+  "_defaults": {
+    "actions": {
+      "pdf": false,
+      "print": false,
+      "jpeg": true,
+      "text": false,
+      "textMode": true,
+      "citation": true,
+      "metadata": true,
+      "share": true,
+      "selection": true,
+      "crop": true
+    }
+  },
+
+  "licenses": [
+    {
+      "id": "public",
+      "accessType": "open",
+      "label": {
+        "cs": "Volna dila",
+        "en": "Public domain"
+      },
+      "actions": {
+        "jpeg": true,
+        "selection": true,
+        "crop": true
+      },
+      "providedBy": {
+        "display": true
+      }
+    }
+  ]
+}

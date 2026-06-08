@@ -1,0 +1,8 @@
+{
+  "realm": "kramerius",
+  "auth-server-url": "http://keycloak.localhost:8990/",
+  "ssl-required": "external",
+  "resource": "krameriusClient",
+  "public-client": true,
+  "confidential-port": 0
+}

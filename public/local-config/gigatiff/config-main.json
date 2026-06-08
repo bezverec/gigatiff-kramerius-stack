@@ -1,0 +1,66 @@
+{
+  "app": {
+    "code": "gigatiff",
+    "name": {
+      "cs": "GigaTIFF localhost",
+      "en": "GigaTIFF localhost"
+    },
+    "contactEmail": "",
+    "logo": "/favicon.svg",
+    "adminClientUrl": ""
+  },
+
+  "api": {
+    "baseUrl": "http://127.0.0.1:8088",
+    "citationUrl": "",
+    "georefUrl": ""
+  },
+
+  "i18n": {
+    "defaultLanguage": "cs",
+    "fallbackLanguage": "en",
+    "supportedLanguages": ["cs", "en"]
+  },
+
+  "features": {
+    "keycloak": true,
+    "mapSearch": false,
+    "mapProvider": "allmaps",
+    "georef": false,
+    "ai": false,
+    "folders": false,
+    "librarySwitch": false
+  },
+
+  "ui": {
+    "cookiebar": false
+  },
+
+  "viewer": {
+    "defaultMode": "single",
+    "availableModes": ["book", "single"],
+    "rememberLastMode": true,
+    "controls": {
+      "zoomIn": true,
+      "zoomOut": true,
+      "fullscreen": true,
+      "fitToScreen": true,
+      "fitToWidth": true,
+      "scrollMode": true,
+      "bookMode": true,
+      "rotate": true,
+      "selectArea": true
+    },
+    "selectionControls": {
+      "text": true,
+      "export": true,
+      "share": true
+    }
+  },
+
+  "search": {
+    "doctypes": ["periodical", "periodicalvolume", "periodicalitem", "monograph", "map", "graphic", "page"]
+  },
+
+  "pages": []
+}
