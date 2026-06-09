@@ -99,6 +99,31 @@ The helper updates:
 - `public/local-config/libraries.json`
 - `rewrite.config`
 
+The helper deliberately keeps two GigaTIFF addresses:
+
+- `GIGATIFF_INTERNAL_BASE_URL` is written into `migration.properties` and is
+  used by Kramerius and worker containers during import and image proxying.
+- `http://<KRAMERIUS_PUBLIC_HOST>:<GIGATIFF_PORT>/iiif/3` is written into
+  `rewrite.config` for browser-facing legacy IIP rewrites.
+
+On Docker Desktop, the default internal URL is
+`http://host.docker.internal:18082/iiif/3`. If you run the integrated GigaTIFF
+service on the same Compose network and want containers to talk directly, set:
+
+```bash
+export GIGATIFF_INTERNAL_BASE_URL=http://gigatiff-server:8080/iiif/3
+./scripts/configure-endpoints.sh 127.0.0.1 127.0.0.1
+```
+
+PowerShell equivalent:
+
+```powershell
+.\scripts\configure-endpoints.ps1 `
+  -PublicHost 127.0.0.1 `
+  -BindAddr 127.0.0.1 `
+  -GigaTiffInternalBaseUrl http://gigatiff-server:8080/iiif/3
+```
+
 ## Step 2: Start Keycloak First
 
 Start Keycloak and its database:
@@ -204,6 +229,15 @@ docker compose logs -f --tail=100 kramerius
 
 The first start can take a while because databases and Solr cores need to
 initialize.
+
+For a fresh machine, also check that the process manager and both workers are
+running. Imports can be scheduled from the admin client even when workers are not
+yet polling correctly:
+
+```bash
+docker compose ps processManager curatorWorker publicWorker
+docker compose logs --tail=100 processManager curatorWorker publicWorker
+```
 
 ## Step 5: Start GigaTIFF
 
@@ -355,8 +389,8 @@ The import configuration is set for IIIF Image API 3 URLs:
 
 ```properties
 convert.useImageServer=true
-convert.imageServerTilesURLPrefix=http://127.0.0.1:18082/iiif/3
-convert.imageServerImagesURLPrefix=http://127.0.0.1:18082/iiif/3
+convert.imageServerTilesURLPrefix=http://host.docker.internal:18082/iiif/3
+convert.imageServerImagesURLPrefix=http://host.docker.internal:18082/iiif/3
 convert.imageServerSuffix.removeFilenameExtensions=false
 convert.imageServerSuffix.tiles=
 convert.imageServerSuffix.big=/full/max/0/default.jpg
@@ -370,6 +404,22 @@ convert.imageServerDirectorySubfolders=true
 `/info.json` itself when proxying IIIF tiles. If the stored `tiles-url` already
 contains `/info.json`, Kramerius will request `.../info.json/info.json` and the
 viewer will fail.
+
+When an import finishes, check the follow-up index process as well as the import
+process. A successful conversion can still be followed by a failed reindex if
+Solr rejects a field:
+
+```bash
+docker compose logs --tail=200 curatorWorker
+docker compose logs --tail=200 solr
+```
+
+If the admin client process list fails with `JSONObject["owner"] not a string.`,
+run the owner normalization helper before retrying the process view:
+
+```bash
+./scripts/normalize-process-owners.sh
+```
 
 ## Step 9: Grant Public Full-Image Access
 
@@ -646,6 +696,32 @@ export KEYCLOAK_PUBLIC_HOST=10.0.120.30
 docker compose up -d --build web-client admin-client keycloak_eduid kramerius
 ```
 
+Use one browser hostname consistently during login. Mixing `127.0.0.1`,
+`localhost`, `keycloak.localhost` and a LAN IP in the same login flow can leave
+stale Keycloak cookies and produce:
+
+```text
+Cookie not found. Please make sure cookies are enabled in your browser.
+```
+
+If that happens, close old login tabs, clear cookies for the Keycloak host you
+are using, rerun `scripts/configure-endpoints.*` with the intended public hosts,
+and rebuild/restart `web-client`, `admin-client`, `keycloak_eduid` and
+`kramerius`.
+
+If the web client still shows MZK/CDK data, verify the runtime config served by
+the local nginx container:
+
+```bash
+curl http://127.0.0.1:1234/local-config/libraries.json
+curl http://127.0.0.1:1234/local-config/gigatiff/config-main.json
+```
+
+The browser console should report that configuration was loaded for library
+`gigatiff`, and API calls should go to `http://127.0.0.1:8088`, or to your
+configured `KRAMERIUS_PUBLIC_HOST`. If not, rerun `scripts/configure-endpoints.*`,
+rebuild `web-client`, and hard-refresh the browser.
+
 If thumbnails load but the main image returns 403, apply:
 
 ```bash
@@ -664,6 +740,22 @@ Then re-import the affected object or patch existing Akubra FOXML datastreams.
 If small thumbnails return 500 and Kramerius logs show a GigaTIFF URL ending in
 `/full/`, make sure GigaTIFF includes the compatibility fallback for truncated
 Kramerius thumbnail URLs.
+
+If a periodical opens in grid view but the timeline or periodical facets fail,
+check dates in the imported metadata. Values with uncertainty markers, for
+example:
+
+```text
+[1953?]-1992
+```
+
+can be accepted by parts of the import but fail later in Solr or client-side date
+handling. For this local test stack, normalize such ranges before import, for
+example to:
+
+```text
+1953-1992
+```
 
 ## Stop and Cleanup
 
