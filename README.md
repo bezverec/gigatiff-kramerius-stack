@@ -1,68 +1,131 @@
-# Kramerius test stack for GigaTIFF
+# Kramerius 7.2.1 test stack for GigaTIFF
 
-This repository contains the local test deployment files for running Kramerius 7.2.1 against a GigaTIFF IIIF image server on localhost.
+This repository contains a reproducible local/LAN test deployment for Kramerius
+7.2.1 connected to the GigaTIFF IIIF image server.
 
-It intentionally contains configuration and installation scaffolding only. Runtime databases, Solr indexes, logs, imported NDK packages, image payloads and generated caches are not tracked.
+The repository tracks configuration and installation scaffolding only. Runtime
+databases, Akubra object store data, Solr indexes, imported NDK packages,
+generated JP2 files, logs and caches are intentionally ignored.
 
-## What is included
+## Layout
 
-- `docker-compose.yml` for the local Kramerius stack
-- Kramerius Tomcat configuration: `server.xml`, `rewrite.config`, `logging.properties`
-- `.kramerius4` configuration under `mnt/import/.kramerius4`
-- Solr 10 core configuration under `mnt/containers/solr/data`
-- local web client runtime configuration under `public/local-config`
-- a local wrapper for `trinera/cdk-client:3.0.14-beta`
-
-## Main services
-
-- Kramerius API: `http://127.0.0.1:8088`
-- web client: `http://127.0.0.1:1234`
-- admin client, optional profile: `http://127.0.0.1:1235`
-- process manager: `http://127.0.0.1:8082`
-- Solr: `http://127.0.0.1:8983`
-- Keycloak: `http://keycloak.localhost:8990`
-
-The stack uses PostgreSQL 18.4 for Kramerius and the process manager, Solr 10.0.0, Kramerius 7.2.1, and process-manager 1.5.
+- `docker-compose.yml` - Kramerius, Solr, Keycloak, workers, web client, optional admin client.
+- `docker-compose.gigatiff.yml` - optional side-by-side GigaTIFF image server and Dragonfly cache.
+- `docker-compose.tools.yml` - optional Dockhand and Dashy tools.
+- `mnt/import/.kramerius4` - Kramerius runtime configuration used by the API and workers.
+- `mnt/containers/solr/data` - Solr core configuration only, not indexes.
+- `public/local-config` - GigaTIFF-branded web client runtime configuration.
+- `ops/sql/grant-public-read.sql` - idempotent local test permission fix for public IMG_FULL access.
+- `scripts/configure-endpoints.*` - helper to switch between localhost and LAN host URLs.
 
 ## Requirements
 
-- Docker with Docker Compose
-- GigaTIFF image server running separately on `http://127.0.0.1:18082`
-- optional admin client checkout at `../kramerius-admin-client` when using the `admin` profile
+- Docker with Compose v2.
+- For integrated GigaTIFF: a side-by-side `../gigatiff` checkout.
+- For the admin client profile: a side-by-side `../kramerius-admin-client` checkout.
 
-The migration configuration expects the IIIF server at:
+Recommended side-by-side layout:
 
 ```text
-http://127.0.0.1:18082/iiif/3
+services/
+  gigatiff/
+  kramerius-test/
+  kramerius-admin-client/   # optional
 ```
+
+## Configure Host URLs
+
+Local workstation:
+
+```bash
+./scripts/configure-endpoints.sh 127.0.0.1 127.0.0.1
+```
+
+LAN test server, for example ZimaBoard at `10.0.120.30`:
+
+```bash
+./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
+```
+
+PowerShell equivalent:
+
+```powershell
+.\scripts\configure-endpoints.ps1 -PublicHost 10.0.120.30 -BindAddr 0.0.0.0
+```
+
+The helper updates `.env`, `keycloak.json`, web client config,
+`migration.properties`, and `rewrite.config`.
 
 ## Start
 
-Start the core Kramerius test stack:
+Core Kramerius stack only, expecting an external GigaTIFF server on port `18082`:
 
-```powershell
+```bash
 docker compose up -d --build
 ```
 
-Start with the admin client as well:
+Core stack plus integrated GigaTIFF image server:
 
-```powershell
-docker compose --profile admin up -d --build
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gigatiff.yml up -d --build
 ```
 
-Show service status:
+With the admin client profile:
 
-```powershell
-docker compose ps
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gigatiff.yml --profile admin up -d --build
 ```
 
-Stop the stack:
+Optional Dockhand and Dashy:
 
-```powershell
+```bash
+docker compose -f docker-compose.tools.yml --profile tools up -d
+```
+
+Stop:
+
+```bash
 docker compose down
+docker compose -f docker-compose.tools.yml --profile tools down
 ```
 
-## Import workspace
+## Default URLs
+
+With default localhost settings:
+
+- Web client: `http://127.0.0.1:1234`
+- Admin client: `http://127.0.0.1:1235`
+- Kramerius API: `http://127.0.0.1:8088`
+- Keycloak: `http://127.0.0.1:8990`
+- Solr: `http://127.0.0.1:8983`
+- GigaTIFF: `http://127.0.0.1:18082`
+- Dockhand: `http://127.0.0.1:3000`
+- Dashy: `http://127.0.0.1:18080`
+
+## GigaTIFF Integration Notes
+
+The import configuration is set for IIIF Image API 3 URLs:
+
+```properties
+convert.imageServerTilesURLPrefix=http://127.0.0.1:18082/iiif/3
+convert.imageServerImagesURLPrefix=http://127.0.0.1:18082/iiif/3
+convert.imageServerSuffix.removeFilenameExtensions=false
+convert.imageServerSuffix.tiles=
+```
+
+`convert.imageServerSuffix.tiles` must stay empty. Kramerius appends
+`/info.json` itself when proxying IIIF tiles. If the stored `tiles-url` already
+contains `/info.json`, Kramerius will request `.../info.json/info.json` and the
+viewer will fail.
+
+The integrated GigaTIFF compose uses:
+
+- Dragonfly response cache.
+- `jpeg2000-grok-ffi` server feature.
+- cache namespace `gigatiff-server-response-v12-jp2-auto-fix`.
+- OpenJPEG FFI for full-resolution JP2 tiles and Grok FFI for reduced JP2 tiles.
+
+## Import Workspace
 
 Put NDK import packages into:
 
@@ -70,39 +133,88 @@ Put NDK import packages into:
 mnt/import/.kramerius4/import
 ```
 
-The repository keeps only `.gitkeep` placeholders for import and conversion directories. Imported packages, converted JP2 files and Akubra/Fedora object store data are deliberately ignored.
-
-## Web client notes
-
-The web client service builds a small local wrapper over `trinera/cdk-client:3.0.14-beta`.
-
-The wrapper:
-
-- serves `public/local-config` as runtime configuration
-- proxies `/search/` to the local Kramerius container
-- forces the beta client runtime to use `gigatiff` instead of falling back to MZK
-- clears stale `CDK_DEV_*` and `cdk-cache:*` browser localStorage entries before Angular boots
-- disables browser caching for local JS/config responses
-
-The active client config is:
+Generated conversion output is written under:
 
 ```text
-public/local-config/gigatiff/config-main.json
+mnt/import/.kramerius4/convert
+mnt/imageserver/iip-data
 ```
 
-## Solr notes
+Those directories are ignored by Git.
 
-The tracked Solr tree contains core configuration only. Index directories such as `data/index`, transaction logs, snapshots and ZooKeeper runtime state are ignored.
+After the first Kramerius boot and before testing public full-image access, run:
 
-The included schemas are aligned with this local Kramerius 7.2.1 / Solr 10 test setup, including the fields needed by the current import/indexing flow.
+```bash
+./scripts/grant-public-read.sh
+```
 
-## Local credentials
+or:
 
-The compose file contains local-only development credentials for disposable containers, for example:
+```powershell
+.\scripts\grant-public-read.ps1
+```
 
-- `fedoraAdmin/fedoraAdmin`
-- `process/process`
-- `keycloakAdmin/keycloakAdmin`
+This applies `ops/sql/grant-public-read.sql`, granting root `a_read` to
+`common_users` if it is missing. Without it, anonymous users may see thumbnails
+but receive 403 for `IMG_FULL` / IIIF `info.json`.
 
-Do not reuse these values outside this local test stack.
+## Admin Client
 
+The `admin` profile expects `../kramerius-admin-client`.
+
+```bash
+git clone https://github.com/ceskaexpedice/kramerius-admin-client.git ../kramerius-admin-client
+docker compose --profile admin up -d --build admin-client
+```
+
+The admin build uses `ops/admin-client/Dockerfile.gigatiff`, which injects local
+GigaTIFF/Kramerius URLs into `assets/shared/globals.js`.
+
+## Optional Tools
+
+Dockhand is useful for inspecting containers through the Docker socket.
+
+Dashy provides a simple URL dashboard. The default config is
+`ops/dashy/conf.yml`; edit it if your public host or ports differ from the
+defaults, or regenerate endpoint config first.
+
+## Troubleshooting
+
+Check stack status:
+
+```bash
+docker compose ps
+docker compose logs --tail=100 kramerius
+```
+
+Check GigaTIFF readiness:
+
+```bash
+curl http://127.0.0.1:18082/readyz
+curl http://127.0.0.1:18082/metrics
+```
+
+If thumbnails load but the main image returns 403, apply:
+
+```bash
+./scripts/grant-public-read.sh
+```
+
+If IIIF `info.json` returns 500 and logs show a URL ending in
+`info.json/info.json`, verify `convert.imageServerSuffix.tiles=` and re-import
+or patch existing Akubra FOXML datastreams.
+
+If browser redirects point to `127.0.0.1` from a LAN client, rerun
+`scripts/configure-endpoints.*` with the LAN host and recreate the affected
+containers.
+
+## Local Credentials
+
+These are disposable test credentials only:
+
+- PostgreSQL Kramerius: `fedoraAdmin/fedoraAdmin`
+- PostgreSQL process manager: `process/process`
+- Keycloak admin: `keycloakAdmin/keycloakAdmin`
+- Example Kramerius admin user, when created: `krameriusAdmin/krameriusAdmin`
+
+Do not reuse these values outside this test stack.

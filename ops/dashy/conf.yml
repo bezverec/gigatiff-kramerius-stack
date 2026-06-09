@@ -1,0 +1,45 @@
+pageInfo:
+  title: GigaTIFF Kramerius Test
+  description: Local links for the Kramerius and GigaTIFF test stack
+appConfig:
+  theme: default
+  layout: auto
+  iconSize: medium
+  statusCheck: true
+sections:
+  - name: Kramerius
+    icon: fas fa-book-open
+    items:
+      - title: Web Client
+        url: http://127.0.0.1:1234
+        icon: fas fa-globe
+      - title: Admin Client
+        url: http://127.0.0.1:1235
+        icon: fas fa-user-shield
+      - title: Kramerius API
+        url: http://127.0.0.1:8088/search/api/client/v7.0/info
+        icon: fas fa-code
+      - title: Keycloak
+        url: http://127.0.0.1:8990
+        icon: fas fa-key
+  - name: Image Server
+    icon: fas fa-image
+    items:
+      - title: GigaTIFF
+        url: http://127.0.0.1:18082
+        icon: fas fa-images
+      - title: GigaTIFF Readiness
+        url: http://127.0.0.1:18082/readyz
+        icon: fas fa-heartbeat
+      - title: GigaTIFF Metrics
+        url: http://127.0.0.1:18082/metrics
+        icon: fas fa-chart-line
+  - name: Operations
+    icon: fas fa-screwdriver-wrench
+    items:
+      - title: Dockhand
+        url: http://127.0.0.1:3000
+        icon: fas fa-boxes-stacked
+      - title: Solr
+        url: http://127.0.0.1:8983
+        icon: fas fa-search

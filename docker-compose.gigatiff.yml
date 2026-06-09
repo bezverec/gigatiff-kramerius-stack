@@ -1,0 +1,48 @@
+services:
+  gigatiff-dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.30.3
+    command:
+      - --cache_mode=true
+      - --maxmemory=2gb
+      - --proactor_threads=4
+    ulimits:
+      memlock: -1
+    volumes:
+      - gigatiff_dragonfly_data:/data
+
+  gigatiff-server:
+    build:
+      context: ${GIGATIFF_SOURCE_DIR:-../gigatiff}
+      args:
+        GIGATIFF_BUILD_GROK: ${GIGATIFF_BUILD_GROK:-1}
+        GIGATIFF_SERVER_FEATURES: ${GIGATIFF_SERVER_FEATURES:-jpeg2000-grok-ffi}
+    image: gigatiff-server:local
+    command:
+      - --root
+      - /data
+      - --cache-dir
+      - /cache
+      - --cache-backend
+      - dragonfly
+      - --dragonfly-url
+      - redis://gigatiff-dragonfly:6379/
+      - --cache-namespace
+      - ${GIGATIFF_CACHE_NAMESPACE:-gigatiff-server-response-v12-jp2-auto-fix}
+      - --cache-max-mb
+      - "4096"
+      - --max-concurrent-renders
+      - "4"
+      - --openjpeg-threads
+      - "4"
+      - --addr
+      - 0.0.0.0:8080
+    ports:
+      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${GIGATIFF_PORT:-18082}:8080"
+    volumes:
+      - ./mnt/imageserver/iip-data:/data:ro
+      - ./cache/gigatiff:/cache
+    depends_on:
+      - gigatiff-dragonfly
+
+volumes:
+  gigatiff_dragonfly_data:

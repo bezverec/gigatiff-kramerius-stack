@@ -1,0 +1,28 @@
+services:
+  dockhand:
+    profiles:
+      - tools
+    image: fnsys/dockhand:latest
+    container_name: kramerius-test-dockhand
+    restart: unless-stopped
+    ports:
+      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${DOCKHAND_PORT:-3000}:3000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
+
+  dashy:
+    profiles:
+      - tools
+    image: lissy93/dashy:latest
+    container_name: kramerius-test-dashy
+    restart: unless-stopped
+    ports:
+      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${DASHY_PORT:-18080}:8080"
+    volumes:
+      - ./ops/dashy/conf.yml:/app/user-data/conf.yml:ro
+    environment:
+      NODE_ENV: production
+
+volumes:
+  dockhand_data:
