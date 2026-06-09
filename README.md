@@ -536,6 +536,16 @@ The Czech Hunspell dictionary files referenced by `managed-schema` are tracked
 with the Solr config so a fresh Solr core can start without missing analyzer
 resources.
 
+The `logs` core configuration is tracked as well. Kramerius writes access and
+DNNT statistics there when documents and pages are opened. Its schema keeps
+`date.str` as a string, year fields as integers and an `*_str` dynamic field for
+Solr's schemaless copy-field processor. Without this, page access can still work
+but Kramerius logs repeated Solr 500 errors such as:
+
+```text
+copyField dest :'date.str_str' is not an explicit field and doesn't match a dynamicField.
+```
+
 ### Public `IMG_FULL` access
 
 `ops/sql/grant-public-read.sql` is an idempotent local test helper. It grants

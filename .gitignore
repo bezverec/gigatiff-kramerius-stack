@@ -16,6 +16,12 @@ mnt/import/.kramerius4/statistics/
 mnt/containers/*/
 !mnt/containers/solr/
 !mnt/containers/solr/data/
+!mnt/containers/solr/data/logs/
+!mnt/containers/solr/data/logs/conf/
+!mnt/containers/solr/data/logs/conf/managed-schema
+!mnt/containers/solr/data/logs/core.properties
+!mnt/containers/solr/data/logs/solrconfig.xml
+!mnt/containers/solr/data/logs/stopwords.txt
 mnt/containers/solr/data/*/data/
 mnt/containers/solr/data/zoo_data/
 
