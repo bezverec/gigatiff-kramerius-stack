@@ -236,10 +236,23 @@ Dockhand provides a lightweight Docker UI. Dashy provides a link dashboard.
 Dashy browser links point to `127.0.0.1`, while its status checks use Docker
 service names so they work from inside the Dashy container.
 
+Run the tools from the repository root so they join the same Compose project and
+Docker network as the core stack.
+
 Start both:
 
 ```bash
 docker compose -f docker-compose.tools.yml --profile tools up -d
+```
+
+If you want to start the core stack, GigaTIFF and the tools in one command, use:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.gigatiff.yml \
+  -f docker-compose.tools.yml \
+  --profile tools up -d --build
 ```
 
 Stop them:
@@ -254,11 +267,50 @@ Dashy config lives in:
 ops/dashy/conf.yml
 ```
 
+Each Dashy item has two URLs:
+
+- `url` is the browser-facing localhost URL opened when you click the item.
+- `statusCheckUrl` is the container-facing URL used by Dashy health checks.
+
+For example, the web client opens as `http://127.0.0.1:1234` in your browser,
+but Dashy checks it from inside Docker as `http://web-client/`. If Dashy shows a
+service as down while the browser link works, check that the service name in
+`statusCheckUrl` matches the Compose service and that the tools were started
+from this repo directory. Services from optional profiles, such as GigaTIFF, are
+expected to show as down until that profile is running.
+
 Dockhand gets the local compose stack registered automatically by
 `dockhand-init`. The repo is mounted into the Dockhand container at:
 
 ```text
 /workspace/kramerius-test
+```
+
+The registered stack points Dockhand at:
+
+```text
+/workspace/kramerius-test/docker-compose.yml
+```
+
+If a `.env` file exists in the repository root, `dockhand-init` registers it as:
+
+```text
+/workspace/kramerius-test/.env
+```
+
+The Docker socket is mounted into Dockhand, so it should manage the local Docker
+daemon directly. If Dockhand shows connection errors, first check:
+
+```bash
+docker compose -f docker-compose.tools.yml --profile tools logs dockhand-init
+docker compose -f docker-compose.tools.yml --profile tools logs dockhand
+```
+
+`dockhand-init` is idempotent. Re-run it after changing stack paths or the `.env`
+file:
+
+```bash
+docker compose -f docker-compose.tools.yml --profile tools up dockhand-init
 ```
 
 If you deploy on a LAN host, update URLs in `ops/dashy/conf.yml` or regenerate
@@ -388,6 +440,18 @@ views, for example:
 - `contains_licenses`
 - `licenses.facet`
 
+It also includes fields emitted by the Kramerius 7.2 indexer and by the
+upstream Solr 9.x profile, for example:
+
+- `authors.aut.facet`
+- `authors.aut.identifiers`
+- `coords.is_point`
+- `date_instant.year`
+- `subject_names_personal.search`
+- `subject_names_corporate.facet`
+- `subject_temporals.search`
+- `subtype`
+
 It also keeps copy rules used by license facets:
 
 ```xml
@@ -399,7 +463,9 @@ It also keeps copy rules used by license facets:
 If the schema is incomplete, the web client can load the root object but fail on
 children/facet queries with HTTP 500 responses from Kramerius. A typical failing
 query asks Solr for fields such as `date.str`, `own_parent.pid`,
-`issue.type.code`, `licenses` or sorts by `date.min`.
+`issue.type.code`, `licenses` or sorts by `date.min`. Import or reindex jobs can
+also fail with Solr `unknown field` errors for newer indexer fields such as
+`authors.aut.facet` or `authors.aut.identifiers`.
 
 When changing Solr schema files:
 
@@ -412,7 +478,7 @@ When changing Solr schema files:
 For a quick schema sanity check:
 
 ```bash
-grep -n 'own_parent.pid\|date.str\|licenses.facet' \
+grep -n 'own_parent.pid\|date.str\|licenses.facet\|authors.aut.identifiers\|subject_names_personal.search' \
   mnt/containers/solr/data/search/conf/managed-schema
 ```
 
