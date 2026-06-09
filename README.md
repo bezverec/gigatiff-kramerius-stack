@@ -96,6 +96,7 @@ With default localhost settings:
 - GigaTIFF: `http://127.0.0.1:18082`
 - Dockhand: `http://127.0.0.1:3000`
 - Dashy: `http://127.0.0.1:18080`
+- Portainer, if installed separately on the host: `https://127.0.0.1:9443`
 
 ## GigaTIFF Integration Notes
 
@@ -172,6 +173,10 @@ Dockhand is useful for inspecting containers through the Docker socket.
 Dashy provides a simple URL dashboard. The default config is
 `ops/dashy/conf.yml`; edit it if your public host or ports differ from the
 defaults, or regenerate endpoint config first.
+
+The Dashy Portainer entry is only a convenience link for an existing host
+Portainer installation. The recommended Portainer URL is HTTPS on port `9443`;
+do not point it at unrelated local services such as port `5050`.
 
 ## Troubleshooting
 
