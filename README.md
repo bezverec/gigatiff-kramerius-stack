@@ -321,6 +321,167 @@ This applies `ops/sql/grant-public-read.sql`, granting root `a_read` to
 `common_users` if it is missing. Without it, anonymous users may see thumbnails
 but receive 403 for `IMG_FULL` or IIIF `info.json`.
 
+## Local Fixes and Compatibility Notes
+
+This test stack contains a few deliberate local fixes. They are part of the
+reproducible setup, not accidental generated state.
+
+### Solr 10 schema
+
+The Solr configuration under:
+
+```text
+mnt/containers/solr/data
+```
+
+is tracked in Git on purpose. Do not replace it with a freshly generated empty
+Solr core.
+
+The file:
+
+```text
+mnt/containers/solr/data/MUST_BE_SYNC_WITH_PROJECT.txt
+```
+
+documents that the local Solr config should stay in sync with the upstream
+Kramerius Solr 9.x installation profile:
+
+```text
+https://github.com/ceskaexpedice/kramerius/tree/master/installation/solr-9.x
+```
+
+The most important core for the web client is:
+
+```text
+mnt/containers/solr/data/search/conf/managed-schema
+```
+
+It includes fields used by the Kramerius/CDK web client detail and periodical
+views, for example:
+
+- `pid`
+- `model`
+- `accessibility`
+- `root.pid`
+- `own_parent.pid`
+- `date.str`
+- `date.min`
+- `part.number.str`
+- `issue.type.code`
+- `licenses`
+- `contains_licenses`
+- `licenses.facet`
+
+It also keeps copy rules used by license facets:
+
+```xml
+<copyField source="contains_licenses" dest="licenses.facet"/>
+<copyField source="licenses" dest="licenses.facet"/>
+<copyField source="licenses_of_ancestors" dest="licenses.facet"/>
+```
+
+If the schema is incomplete, the web client can load the root object but fail on
+children/facet queries with HTTP 500 responses from Kramerius. A typical failing
+query asks Solr for fields such as `date.str`, `own_parent.pid`,
+`issue.type.code`, `licenses` or sorts by `date.min`.
+
+When changing Solr schema files:
+
+1. Stop Kramerius and Solr.
+2. Keep `mnt/containers/solr/data/*/conf/managed-schema` under version control.
+3. Remove generated Solr indexes only if you want a clean reindex.
+4. Start Solr and Kramerius again.
+5. Reindex or reimport affected objects.
+
+For a quick schema sanity check:
+
+```bash
+grep -n 'own_parent.pid\|date.str\|licenses.facet' \
+  mnt/containers/solr/data/search/conf/managed-schema
+```
+
+### Public `IMG_FULL` access
+
+`ops/sql/grant-public-read.sql` is an idempotent local test helper. It grants
+root `a_read` to `common_users`.
+
+This fixes the local-test situation where thumbnails are visible, but anonymous
+users are still denied full images and IIIF `info.json` with HTTP 403.
+
+Apply it after the first boot:
+
+```bash
+./scripts/grant-public-read.sh
+```
+
+### IIIF image URL suffixes
+
+`mnt/import/.kramerius4/migration.properties` stores image-server URL suffixes.
+The important values are:
+
+```properties
+convert.imageServerSuffix.tiles=
+convert.imageServerSuffix.big=/full/max/0/default.jpg
+convert.imageServerSuffix.thumb=/full/,128/0/default.jpg
+convert.imageServerSuffix.preview=/full/,700/0/default.jpg
+```
+
+`convert.imageServerSuffix.tiles` must stay empty because Kramerius appends
+`/info.json` when proxying IIIF tile metadata. If `/info.json` is stored in the
+datastream already, requests can become `.../info.json/info.json`.
+
+### Legacy IIP rewrite rules
+
+`rewrite.config` maps old IIP-style requests to GigaTIFF IIIF Image API 3 URLs.
+This lets Kramerius paths that still call `/fcgi-bin/iipsrv.fcgi` resolve to the
+same JP2 files served by GigaTIFF.
+
+Examples:
+
+```text
+FIF=...&HEI=128&CVT=jpeg  -> /iiif/3/.../full/,128/0/default.jpg
+FIF=...&HEI=700&CVT=jpeg  -> /iiif/3/.../full/,700/0/default.jpg
+FIF=...&CVT=jpeg          -> /iiif/3/.../full/max/0/default.jpg
+iiif=.../info.json        -> /iiif/3/.../info.json
+```
+
+Run `scripts/configure-endpoints.*` again after changing the public host,
+because it rewrites GigaTIFF URL prefixes in `rewrite.config`.
+
+### Truncated thumbnail URLs
+
+Some imported thumbnail URLs were observed to reach GigaTIFF as:
+
+```text
+/iiif/3/<identifier>/full/
+```
+
+instead of the complete:
+
+```text
+/iiif/3/<identifier>/full/,128/0/default.jpg
+```
+
+GigaTIFF contains a compatibility fallback for that truncated Kramerius
+thumbnail form and treats it as a 128-pixel-high JPEG thumbnail. Without that
+fallback, Kramerius reports thumbnail HTTP 500 errors because GigaTIFF correctly
+rejects the incomplete IIIF URL with HTTP 400.
+
+### Web client favicon and proxy behavior
+
+The web client image is built through `Dockerfile.web-client-gigatiff` and uses:
+
+```text
+web-client-entrypoint.sh
+web-client-nginx.conf
+public/favicon.svg
+public/local-config
+```
+
+The entrypoint injects local runtime URLs and replaces the upstream favicon with
+the GigaTIFF SVG. The nginx config proxies `/search/` to Kramerius and serves
+legacy favicon paths from the same SVG to avoid stale browser icon references.
+
 ## Admin Client Notes
 
 The stack expects `../kramerius-admin-client` to exist before `docker compose up`.
