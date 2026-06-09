@@ -751,22 +751,6 @@ If small thumbnails return 500 and Kramerius logs show a GigaTIFF URL ending in
 `/full/`, make sure GigaTIFF includes the compatibility fallback for truncated
 Kramerius thumbnail URLs.
 
-If a periodical opens in grid view but the timeline or periodical facets fail,
-check dates in the imported metadata. Values with uncertainty markers, for
-example:
-
-```text
-[1953?]-1992
-```
-
-can be accepted by parts of the import but fail later in Solr or client-side date
-handling. For this local test stack, normalize such ranges before import, for
-example to:
-
-```text
-1953-1992
-```
-
 ## Stop and Cleanup
 
 Stop containers without deleting data:
