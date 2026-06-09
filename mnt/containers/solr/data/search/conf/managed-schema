@@ -230,6 +230,8 @@
   <field name="_version_" type="long" indexed="true" stored="true"/>
   <field name="accessibility" type="string" indexed="true" stored="true"/>
   <field name="authors" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="authors.aut.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="authors.aut.identifiers" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="authors.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
   <field name="authors.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="collection.desc" type="string" multiValued="true" indexed="true" stored="true"/>
@@ -244,6 +246,7 @@
   <field name="coords.bbox__minX" type="_bbox_coord"/>
   <field name="coords.bbox__minY" type="_bbox_coord"/>
   <field name="coords.bbox__xdl" type="boolean"/>
+  <field name="coords.is_point" type="boolean" indexed="true" stored="true"/>
   <field name="count_internal_part" type="int" indexed="true" docValues="true" stored="true"/>
   <field name="count_issue" type="int" indexed="true" docValues="true" stored="true"/>
   <field name="count_monograph_unit" type="int" indexed="true" docValues="true" stored="true"/>
@@ -255,6 +258,9 @@
   <field name="date.max" type="date" docValues="true" multiValued="false" indexed="true" required="false" stored="true"/>
   <field name="date.min" type="date" docValues="true" multiValued="false" indexed="true" required="false" stored="true"/>
   <field name="date.str" type="string" docValues="false" multiValued="false" indexed="true" stored="true"/>
+  <field name="date_instant.day" type="int" multiValued="false" indexed="true" stored="true"/>
+  <field name="date_instant.month" type="int" multiValued="false" indexed="true" stored="true"/>
+  <field name="date_instant.year" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="date_range_end.day" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="date_range_end.month" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="date_range_end.year" type="int" multiValued="false" indexed="true" stored="true"/>
@@ -324,6 +330,13 @@
   <field name="root.title" type="string" indexed="true" stored="true"/>
   <field name="root.title.sort" type="string" indexed="true" stored="true"/>
   <field name="shelf_locators" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="subject_names_corporate.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="subject_names_corporate.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="subject_names_personal.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="subject_names_personal.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="subject_temporals.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="subject_temporals.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="subtype" type="string" docValues="true" multiValued="false" indexed="true" stored="true"/>
   <field name="text_ocr" type="text_general_not_lemmatized" storeOffsetsWithPositions="true" indexed="true" stored="true"/>
   <field name="title.search" type="text_fgs" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="title.sort" type="string" docValues="true" multiValued="false" indexed="true" stored="true"/>
