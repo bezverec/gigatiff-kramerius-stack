@@ -4,8 +4,10 @@ param(
     [int]$WebClientPort = 1234,
     [int]$AdminClientPort = 1235,
     [int]$KrameriusApiPort = 8088,
+    [string]$KeycloakPublicHost = "keycloak.localhost",
     [int]$KeycloakPort = 8990,
-    [int]$GigaTiffPort = 18082
+    [int]$GigaTiffPort = 18082,
+    [string]$GigaTiffInternalBaseUrl = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,12 +37,16 @@ function Set-PropertyLine {
 }
 
 $envPath = Join-Path $Root ".env"
+if (-not $GigaTiffInternalBaseUrl) {
+    $GigaTiffInternalBaseUrl = "http://host.docker.internal:$GigaTiffPort/iiif/3"
+}
 @(
     "KRAMERIUS_BIND_ADDR=$BindAddr"
     "KRAMERIUS_PUBLIC_HOST=$PublicHost"
     "WEB_CLIENT_PORT=$WebClientPort"
     "ADMIN_CLIENT_PORT=$AdminClientPort"
     "KRAMERIUS_API_PORT=$KrameriusApiPort"
+    "KEYCLOAK_PUBLIC_HOST=$KeycloakPublicHost"
     "KEYCLOAK_PORT=$KeycloakPort"
     "SOLR_PORT=8983"
     "PROCESS_MANAGER_PORT=8082"
@@ -49,6 +55,7 @@ $envPath = Join-Path $Root ".env"
     "KRAMERIUS_DB_PORT=15432"
     "PROCESS_DB_PORT=25432"
     "GIGATIFF_PORT=$GigaTiffPort"
+    "GIGATIFF_INTERNAL_BASE_URL=$GigaTiffInternalBaseUrl"
     "GIGATIFF_SOURCE_DIR=../gigatiff"
     "GIGATIFF_CACHE_NAMESPACE=gigatiff-server-response-v12-jp2-auto-fix"
     "DOCKHAND_PORT=3000"
@@ -57,8 +64,8 @@ $envPath = Join-Path $Root ".env"
 
 $migration = Join-Path $Root "mnt/import/.kramerius4/migration.properties"
 $gigaBase = "http://${PublicHost}:$GigaTiffPort/iiif/3"
-Set-PropertyLine $migration "convert.imageServerTilesURLPrefix" $gigaBase
-Set-PropertyLine $migration "convert.imageServerImagesURLPrefix" $gigaBase
+Set-PropertyLine $migration "convert.imageServerTilesURLPrefix" $GigaTiffInternalBaseUrl
+Set-PropertyLine $migration "convert.imageServerImagesURLPrefix" $GigaTiffInternalBaseUrl
 Set-PropertyLine $migration "convert.imageServerSuffix.removeFilenameExtensions" "false"
 Set-PropertyLine $migration "convert.imageServerSuffix.tiles" ""
 
@@ -72,7 +79,7 @@ Set-PropertyLine $configuration "client" "http://${PublicHost}:$WebClientPort/"
 
 $keycloak = Join-Path $Root "mnt/import/.kramerius4/keycloak.json"
 $keycloakJson = Get-Content -LiteralPath $keycloak -Raw | ConvertFrom-Json
-$keycloakJson.'auth-server-url' = "http://${PublicHost}:$KeycloakPort/"
+$keycloakJson.'auth-server-url' = "http://${KeycloakPublicHost}:$KeycloakPort/"
 $keycloakJson | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $keycloak -Encoding UTF8
 
 $configMain = Join-Path $Root "public/local-config/gigatiff/config-main.json"

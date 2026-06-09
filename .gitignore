@@ -6,6 +6,7 @@ cache/
 # Kramerius import/runtime payloads
 mnt/import/.kramerius4/convert/*
 !mnt/import/.kramerius4/convert/.gitkeep
+mnt/import/.kramerius4/convert-converted/
 mnt/import/.kramerius4/import/*
 !mnt/import/.kramerius4/import/.gitkeep
 mnt/import/.kramerius4/data/

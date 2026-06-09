@@ -33,7 +33,7 @@ services:
       lock_server:
         condition: service_started
       processManager:
-        condition: service_started
+        condition: service_healthy
 
   krameriusPostgres:
     image: "postgres:18.4"
@@ -89,8 +89,8 @@ services:
       KEYCLOAK_ADMIN_PASSWORD: keycloakAdmin
       KC_DB: postgres
       KC_HTTP_PORT: 8990
-      KC_HOSTNAME_URL: http://${KRAMERIUS_PUBLIC_HOST:-127.0.0.1}:${KEYCLOAK_PORT:-8990}
-      KC_HOSTNAME_ADMIN_URL: http://${KRAMERIUS_PUBLIC_HOST:-127.0.0.1}:${KEYCLOAK_PORT:-8990}
+      KC_HOSTNAME_URL: http://${KEYCLOAK_PUBLIC_HOST:-127.0.0.1}:${KEYCLOAK_PORT:-8990}
+      KC_HOSTNAME_ADMIN_URL: http://${KEYCLOAK_PUBLIC_HOST:-127.0.0.1}:${KEYCLOAK_PORT:-8990}
       KC_HTTP_ENABLED: true
       KC_HOSTNAME_STRICT: false
       KC_HOSTNAME_STRICT_HTTPS: false
@@ -150,6 +150,12 @@ services:
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${PROCESS_MANAGER_PORT:-8082}:8080"
     restart: "always"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/process-manager/api/profile"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   curatorWorker:
     image: "ceskaexpedice/curator-worker:7.2.1"
@@ -157,7 +163,7 @@ services:
       processPostgres:
         condition: service_healthy
       processManager:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./mnt/import/.kramerius4:/root/.kramerius4/
       - ./mnt/imageserver/iip-data/:/mnt/imageserver/iip-data/
@@ -180,7 +186,7 @@ services:
       processPostgres:
         condition: service_healthy
       processManager:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./mnt/import/.kramerius4:/root/.kramerius4/
       - ./mnt/imageserver/iip-data/:/mnt/imageserver/iip-data/

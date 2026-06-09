@@ -15,7 +15,7 @@
   <fieldType name="binary" class="solr.BinaryField"/>
   <fieldType name="boolean" class="solr.BoolField" omitNorms="true" sortMissingLast="true"/>
   <fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
-  <fieldType name="date" class="solr.TrieDateField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
+  <fieldType name="date" class="solr.DatePointField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true"/>
   <fieldType name="double" class="solr.TrieDoubleField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
   <fieldType name="float" class="solr.TrieFloatField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
   <fieldType name="ignored" class="solr.StrField" multiValued="true" indexed="false" stored="false"/>
@@ -252,8 +252,8 @@
   <field name="count_track" type="int" indexed="true" docValues="true" stored="true"/>
   <field name="count_volume" type="int" indexed="true" docValues="true" stored="true"/>
   <field name="created" type="date" docValues="true" multiValued="false" indexed="true" stored="true"/>
-  <field name="date.max" type="date" docValues="false" multiValued="false" indexed="true" required="false" stored="true"/>
-  <field name="date.min" type="date" docValues="false" multiValued="false" indexed="true" required="false" stored="true"/>
+  <field name="date.max" type="date" docValues="true" multiValued="false" indexed="true" required="false" stored="true"/>
+  <field name="date.min" type="date" docValues="true" multiValued="false" indexed="true" required="false" stored="true"/>
   <field name="date.str" type="string" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="date_range_end.day" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="date_range_end.month" type="int" multiValued="false" indexed="true" stored="true"/>

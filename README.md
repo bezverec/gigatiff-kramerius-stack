@@ -28,10 +28,13 @@ files, logs, caches and temporary files are intentionally ignored.
 - `public/local-config` - web-client runtime configuration.
 - `public/favicon.svg` - GigaTIFF favicon mounted into the web client.
 - `ops/admin-client` - Docker build wrapper for the required admin client.
+- `ops/dockhand/register-stack.sh` - Dockhand stack registration helper.
 - `ops/dashy/conf.yml` - Dashy dashboard configuration.
 - `ops/sql/grant-public-read.sql` - local test permission helper for public IMG_FULL access.
+- `ops/sql/normalize-process-owners.sql` - local process manager owner cleanup helper.
 - `scripts/configure-endpoints.*` - helpers for switching between localhost and LAN URLs.
 - `scripts/grant-public-read.*` - helpers for applying the public read permission SQL.
+- `scripts/normalize-process-owners.*` - helpers for fixing process owner JSON compatibility.
 
 ## Prerequisites
 
@@ -172,13 +175,17 @@ and:
 ```json
 {
   "realm": "kramerius",
-  "auth-server-url": "http://127.0.0.1:8990/",
+  "auth-server-url": "http://keycloak.localhost:8990/",
   "resource": "krameriusClient",
+  "verify-token-audience": false,
+  "bearer-only": true,
   "public-client": true
 }
 ```
 
-The endpoint helper rewrites `auth-server-url` for LAN deployments.
+`keycloak.localhost` is intentional for local Docker use: it is resolvable from
+both the host browser and the Kramerius container. The endpoint helper keeps it
+separate from `KRAMERIUS_PUBLIC_HOST` through `KEYCLOAK_PUBLIC_HOST`.
 
 ## Step 4: Start the Core Stack
 
@@ -226,6 +233,8 @@ curl http://127.0.0.1:18082/metrics
 ## Step 6: Start Optional Tools
 
 Dockhand provides a lightweight Docker UI. Dashy provides a link dashboard.
+Dashy browser links point to `127.0.0.1`, while its status checks use Docker
+service names so they work from inside the Dashy container.
 
 Start both:
 
@@ -243,6 +252,13 @@ Dashy config lives in:
 
 ```text
 ops/dashy/conf.yml
+```
+
+Dockhand gets the local compose stack registered automatically by
+`dockhand-init`. The repo is mounted into the Dockhand container at:
+
+```text
+/workspace/kramerius-test
 ```
 
 If you deploy on a LAN host, update URLs in `ops/dashy/conf.yml` or regenerate
@@ -400,6 +416,10 @@ grep -n 'own_parent.pid\|date.str\|licenses.facet' \
   mnt/containers/solr/data/search/conf/managed-schema
 ```
 
+The Czech Hunspell dictionary files referenced by `managed-schema` are tracked
+with the Solr config so a fresh Solr core can start without missing analyzer
+resources.
+
 ### Public `IMG_FULL` access
 
 `ops/sql/grant-public-read.sql` is an idempotent local test helper. It grants
@@ -412,6 +432,29 @@ Apply it after the first boot:
 
 ```bash
 ./scripts/grant-public-read.sh
+```
+
+### Process manager owner JSON compatibility
+
+Kramerius admin client expects process `owner` values to be strings. Local or
+manual process calls can leave older rows with `owner` as `NULL` or empty, which
+can surface in the admin client as:
+
+```text
+JSONObject["owner"] not a string.
+```
+
+Normalize existing rows after a clean rebuild or after manual process-manager
+API calls:
+
+```bash
+./scripts/normalize-process-owners.sh
+```
+
+PowerShell equivalent:
+
+```powershell
+.\scripts\normalize-process-owners.ps1
 ```
 
 ### IIIF image URL suffixes
@@ -528,10 +571,11 @@ curl http://127.0.0.1:18082/readyz
 curl http://127.0.0.1:18082/metrics
 ```
 
-If login redirects point to `keycloak.localhost` or `127.0.0.1` from a LAN
-client, rerun:
+If login redirects should use a LAN hostname instead of `keycloak.localhost`,
+set `KEYCLOAK_PUBLIC_HOST` and rerun:
 
 ```bash
+export KEYCLOAK_PUBLIC_HOST=10.0.120.30
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
 docker compose up -d --build web-client admin-client keycloak_eduid kramerius
 ```

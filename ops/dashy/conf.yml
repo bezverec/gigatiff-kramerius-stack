@@ -12,34 +12,43 @@ sections:
     items:
       - title: Web Client
         url: http://127.0.0.1:1234
+        statusCheckUrl: http://web-client/
         icon: fas fa-globe
       - title: Admin Client
         url: http://127.0.0.1:1235
+        statusCheckUrl: http://admin-client/
         icon: fas fa-user-shield
       - title: Kramerius API
         url: http://127.0.0.1:8088/search/api/client/v7.0/info
+        statusCheckUrl: http://kramerius:8080/search/api/client/v7.0/info?language=cs
         icon: fas fa-code
       - title: Keycloak
         url: http://127.0.0.1:8990
+        statusCheckUrl: http://keycloak_eduid:8990
         icon: fas fa-key
   - name: Image Server
     icon: fas fa-image
     items:
       - title: GigaTIFF
         url: http://127.0.0.1:18082
+        statusCheckUrl: http://gigatiff-server:8080/readyz
         icon: fas fa-images
       - title: GigaTIFF Readiness
         url: http://127.0.0.1:18082/readyz
+        statusCheckUrl: http://gigatiff-server:8080/readyz
         icon: fas fa-heartbeat
       - title: GigaTIFF Metrics
         url: http://127.0.0.1:18082/metrics
+        statusCheckUrl: http://gigatiff-server:8080/metrics
         icon: fas fa-chart-line
   - name: Operations
     icon: fas fa-screwdriver-wrench
     items:
       - title: Dockhand
         url: http://127.0.0.1:3000
+        statusCheckUrl: http://dockhand:3000
         icon: fas fa-boxes-stacked
       - title: Solr
         url: http://127.0.0.1:8983
+        statusCheckUrl: http://solr:8983/solr/admin/info/system
         icon: fas fa-search

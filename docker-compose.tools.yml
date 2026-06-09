@@ -10,6 +10,20 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - dockhand_data:/app/data
+      - ./:/workspace/kramerius-test:ro
+
+  dockhand-init:
+    profiles:
+      - tools
+    image: fnsys/dockhand:latest
+    container_name: kramerius-test-dockhand-init
+    depends_on:
+      - dockhand
+    restart: "no"
+    volumes:
+      - dockhand_data:/app/data
+      - ./ops/dockhand/register-stack.sh:/register-stack.sh:ro
+    entrypoint: ["/bin/sh", "/register-stack.sh"]
 
   dashy:
     profiles:
