@@ -211,8 +211,6 @@ services:
       - kramerius
 
   admin-client:
-    profiles:
-      - admin
     build:
       context: ../kramerius-admin-client
       dockerfile: ../kramerius-test/ops/admin-client/Dockerfile.gigatiff

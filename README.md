@@ -9,7 +9,7 @@ generated JP2 files, logs and caches are intentionally ignored.
 
 ## Layout
 
-- `docker-compose.yml` - Kramerius, Solr, Keycloak, workers, web client, optional admin client.
+- `docker-compose.yml` - Kramerius, Solr, Keycloak, workers, web client, and admin client.
 - `docker-compose.gigatiff.yml` - optional side-by-side GigaTIFF image server and Dragonfly cache.
 - `docker-compose.tools.yml` - optional Dockhand and Dashy tools.
 - `mnt/import/.kramerius4` - Kramerius runtime configuration used by the API and workers.
@@ -22,7 +22,7 @@ generated JP2 files, logs and caches are intentionally ignored.
 
 - Docker with Compose v2.
 - For integrated GigaTIFF: a side-by-side `../gigatiff` checkout.
-- For the admin client profile: a side-by-side `../kramerius-admin-client` checkout.
+- A side-by-side `../kramerius-admin-client` checkout. The admin client is required by this test stack.
 
 Recommended side-by-side layout:
 
@@ -30,7 +30,7 @@ Recommended side-by-side layout:
 services/
   gigatiff/
   kramerius-test/
-  kramerius-admin-client/   # optional
+  kramerius-admin-client/
 ```
 
 ## Configure Host URLs
@@ -58,7 +58,8 @@ The helper updates `.env`, `keycloak.json`, web client config,
 
 ## Start
 
-Core Kramerius stack only, expecting an external GigaTIFF server on port `18082`:
+Core Kramerius stack, including the web and admin clients, expecting an
+external GigaTIFF server on port `18082`:
 
 ```bash
 docker compose up -d --build
@@ -68,12 +69,6 @@ Core stack plus integrated GigaTIFF image server:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.gigatiff.yml up -d --build
-```
-
-With the admin client profile:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.gigatiff.yml --profile admin up -d --build
 ```
 
 Optional Dockhand and Dashy:
@@ -160,11 +155,11 @@ but receive 403 for `IMG_FULL` / IIIF `info.json`.
 
 ## Admin Client
 
-The `admin` profile expects `../kramerius-admin-client`.
+The stack expects `../kramerius-admin-client` to exist before `docker compose up`.
 
 ```bash
 git clone https://github.com/ceskaexpedice/kramerius-admin-client.git ../kramerius-admin-client
-docker compose --profile admin up -d --build admin-client
+docker compose up -d --build admin-client
 ```
 
 The admin build uses `ops/admin-client/Dockerfile.gigatiff`, which injects local
