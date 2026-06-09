@@ -40,9 +40,6 @@ sections:
       - title: Dockhand
         url: http://127.0.0.1:3000
         icon: fas fa-boxes-stacked
-      - title: Portainer
-        url: https://127.0.0.1:9443
-        icon: fas fa-layer-group
       - title: Solr
         url: http://127.0.0.1:8983
         icon: fas fa-search
