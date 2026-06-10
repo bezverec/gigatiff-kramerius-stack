@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.1
+GigaTIFF Kramerius Stack: stack-0.1.2
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -207,17 +207,17 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.1`:
+Published image names for `stack-0.1.2`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.1
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.1
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.1
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.2
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.2
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.2
 ghcr.io/bezverec/gigatiff-server:0.3.0
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.1`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.2`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 

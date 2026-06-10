@@ -165,6 +165,10 @@ jobs:
           ref: ${{ needs.versions.outputs.gigatiff_ref }}
           path: gigatiff
 
+      - name: Show GigaTIFF revision
+        working-directory: gigatiff
+        run: git rev-parse HEAD
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
