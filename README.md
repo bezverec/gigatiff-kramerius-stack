@@ -46,6 +46,7 @@ files, logs, caches and temporary files are intentionally ignored.
 
 Install:
 
+- Buildah on the Linux host that will build the clean local images.
 - Docker with Compose v2.
 - Git.
 - PowerShell 7 or a POSIX shell, depending on which helper scripts you use.
@@ -70,18 +71,29 @@ services/
   kramerius-admin-client/
 ```
 
-The admin client checkout is required because `docker-compose.yml` builds it
-from `../kramerius-admin-client`.
+The admin client checkout is required because the clean Buildah workflow builds
+it from `../kramerius-admin-client`.
 
-## Clean Buildah Stack
+## Default Install
 
-The normal compose files are convenient for iterative development. For a clean
-test deployment, especially on a shared host such as a ZimaBoard, use the
-Buildah workflow instead of copying the current runtime directory.
+The preferred installation path is the clean Buildah stack. It is the only
+recommended path for a reproducible test deployment.
 
-The clean workflow creates images and a fresh stack directory that contain only
-configuration, scripts, Solr schema fixes, Keycloak realm import, branded web
-client files and admin-client build output. It deliberately does not include:
+Do not copy a running Kramerius directory to create a new install. A live
+directory may contain PostgreSQL data, Solr indexes, Akubra object-store files,
+converted JP2 files, logs and caches. The Buildah workflow creates fresh images
+and a fresh stack directory from Git-managed configuration only.
+
+The clean workflow includes:
+
+- Kramerius configuration.
+- Solr schema fixes.
+- Keycloak realm import.
+- GigaTIFF-branded web-client files.
+- Admin-client build output.
+- Bootstrap checks and local test SQL helpers.
+
+It deliberately excludes:
 
 - imported NDK packages,
 - generated JP2/TIFF image payloads,
@@ -91,14 +103,14 @@ client files and admin-client build output. It deliberately does not include:
 - GigaTIFF response cache,
 - logs or temporary files.
 
-Prepare a clean install directory from Git-managed files:
+From the repository checkout, prepare a clean install directory:
 
 ```bash
 ./scripts/prepare-clean-stack.sh /home/bezverec/services/kramerius-test-clean
 cd /home/bezverec/services/kramerius-test-clean
 ```
 
-Configure endpoint URLs:
+Configure endpoint URLs for the target host:
 
 ```bash
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
@@ -129,7 +141,8 @@ DASHY_PORT=28080 \
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
 ```
 
-Build clean local images with Buildah:
+Build clean local images with Buildah. The build script reads `.env`, so run
+endpoint configuration before this step:
 
 ```bash
 ./scripts/build-clean-images.sh
@@ -145,8 +158,7 @@ localhost/gigatiff-kramerius-bootstrap:clean
 
 By default, it also publishes those images into the local Docker daemon so
 Docker Compose can run them. Set `PUSH_TO_DOCKER=0` if you only want Buildah
-storage images. The build script reads `.env`, so run endpoint configuration
-before building the admin-client image.
+storage images.
 
 Start the clean stack:
 
@@ -168,7 +180,7 @@ checks that the Solr schema contains the fields required by our fixes, verifies
 that the `kramerius` realm exists, applies `ops/sql/grant-public-read.sql`, and
 applies `ops/sql/normalize-process-owners.sql`.
 
-The clean stack imports the test Keycloak realm from:
+The clean stack imports the test Keycloak realm automatically from:
 
 ```text
 ops/keycloak/kramerius-realm.json
@@ -197,9 +209,12 @@ Use a new target directory for every clean deployment. Do not run
 `prepare-clean-stack.sh` over a directory that already contains a live database,
 Solr index or imported documents.
 
-## Step 1: Configure Host URLs
+## Configuration
 
-Copy or generate `.env` before starting the stack.
+The clean stack is configured by `.env` plus mounted configuration files under
+`mnt/import/.kramerius4`, `public/local-config` and `rewrite.config`.
+
+Generate `.env` with `scripts/configure-endpoints.*`.
 
 For a localhost-only workstation:
 
@@ -254,61 +269,19 @@ PowerShell equivalent:
   -GigaTiffInternalBaseUrl http://gigatiff-server:8080/iiif/3
 ```
 
-## Step 2: Start Keycloak First
+### Keycloak
 
-Start Keycloak and its database:
-
-```bash
-docker compose up -d keycloakPostgres_eduid keycloak_eduid
-```
-
-Wait until Keycloak is healthy:
-
-```bash
-docker compose ps keycloak_eduid
-```
-
-Open Keycloak:
+The clean Buildah stack imports realm `kramerius` automatically from:
 
 ```text
-http://127.0.0.1:8990
+ops/keycloak/kramerius-realm.json
 ```
 
-On a LAN host, replace `127.0.0.1` with your `KRAMERIUS_PUBLIC_HOST`.
+The imported realm contains:
 
-Default Keycloak admin credentials for this test stack:
-
-```text
-username: keycloakAdmin
-password: keycloakAdmin
-```
-
-## Step 3: Create the Keycloak Realm
-
-In the Keycloak admin console:
-
-1. Create realm `kramerius`.
-2. Create client `krameriusClient`.
-3. Set client type to public:
-   - Client authentication: off.
-   - Standard flow: on.
-   - Direct access grants: on.
-4. Configure valid redirect URIs:
-   - Localhost: `http://127.0.0.1:1234/*`
-   - LAN example: `http://10.0.120.30:1234/*`
-   - Admin client, if used through browser redirects: `http://127.0.0.1:1235/*`
-5. Configure web origins:
-   - Localhost: `http://127.0.0.1:1234`
-   - LAN example: `http://10.0.120.30:1234`
-   - Or use `+` for a quick disposable test setup.
-6. Create roles:
-   - `common_users`
-   - `public_users`
-   - `kramerius_admin`
-   - `k4_admins`
-7. Create user `krameriusAdmin`.
-8. Set password `krameriusAdmin` and disable temporary password.
-9. Assign the roles above to `krameriusAdmin`.
+- public client `krameriusClient`,
+- roles `common_users`, `public_users`, `kramerius_admin` and `k4_admins`,
+- disposable user `krameriusAdmin` with password `krameriusAdmin`.
 
 Kramerius reads its Keycloak client settings from:
 
@@ -342,9 +315,13 @@ and:
 both the host browser and the Kramerius container. The endpoint helper keeps it
 separate from `KRAMERIUS_PUBLIC_HOST` through `KEYCLOAK_PUBLIC_HOST`.
 
-## Step 4: Start the Core Stack
+### Development Compose Workflow
 
-Start Kramerius, Solr, workers, web client and admin client:
+The plain Compose workflow is kept for development and debugging only. It is not
+the preferred clean installation path.
+
+Use it when iterating on Compose files or local configuration in the repository
+checkout:
 
 ```bash
 docker compose up -d --build
@@ -369,7 +346,11 @@ docker compose ps processManager curatorWorker publicWorker
 docker compose logs --tail=100 processManager curatorWorker publicWorker
 ```
 
-## Step 5: Start GigaTIFF
+If you use the development workflow without `docker-compose.clean.yml`, create
+or import the Keycloak realm manually or adapt the clean realm import override
+for your local workflow.
+
+## GigaTIFF Server
 
 If you already run GigaTIFF elsewhere, keep it listening on the configured
 `GIGATIFF_PORT`, default `18082`.
@@ -377,7 +358,11 @@ If you already run GigaTIFF elsewhere, keep it listening on the configured
 To run the integrated GigaTIFF image server next to Kramerius:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.gigatiff.yml up -d --build gigatiff-server
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.clean.yml \
+  -f docker-compose.gigatiff.yml \
+  up -d --build gigatiff-server
 ```
 
 The integrated GigaTIFF compose uses:
@@ -394,14 +379,14 @@ curl http://127.0.0.1:18082/readyz
 curl http://127.0.0.1:18082/metrics
 ```
 
-## Step 6: Start Optional Tools
+## Optional Tools
 
 Dockhand provides a lightweight Docker UI. Dashy provides a link dashboard.
 Dashy browser links point to `127.0.0.1`, while its status checks use Docker
 service names so they work from inside the Dashy container.
 
-Run the tools from the repository root so they join the same Compose project and
-Docker network as the core stack.
+Run the tools from the clean stack directory so they join the same Compose
+project and Docker network as Kramerius.
 
 Start both:
 
@@ -409,14 +394,16 @@ Start both:
 docker compose -f docker-compose.tools.yml --profile tools up -d
 ```
 
-If you want to start the core stack, GigaTIFF and the tools in one command, use:
+If you want to start the clean stack, GigaTIFF and the tools in one command,
+use:
 
 ```bash
 docker compose \
   -f docker-compose.yml \
+  -f docker-compose.clean.yml \
   -f docker-compose.gigatiff.yml \
   -f docker-compose.tools.yml \
-  --profile tools up -d --build
+  --profile tools up -d
 ```
 
 Stop them:
@@ -456,6 +443,9 @@ The registered stack points Dockhand at:
 /workspace/kramerius-test/docker-compose.yml
 ```
 
+For the clean Buildah stack, add `docker-compose.clean.yml` in Dockhand when you
+edit the registered stack.
+
 If a `.env` file exists in the repository root, `dockhand-init` registers it as:
 
 ```text
@@ -483,7 +473,7 @@ endpoint config first and adapt the dashboard manually.
 Portainer is intentionally not part of this stack. Use Dockhand for this test
 deployment to keep the operations surface small.
 
-## Step 7: Open the Services
+## Service URLs
 
 With default localhost settings:
 
@@ -498,7 +488,15 @@ With default localhost settings:
 
 For a LAN deployment, replace `127.0.0.1` with `KRAMERIUS_PUBLIC_HOST`.
 
-## Step 8: Import Test Data
+Example ports used for the side-by-side ZimaBoard clean stack:
+
+- Web client: `http://10.0.120.30:2234`
+- Admin client: `http://10.0.120.30:2235`
+- Kramerius API: `http://10.0.120.30:28088`
+- Keycloak: `http://10.0.120.30:28990`
+- Solr: `http://10.0.120.30:28983`
+
+## Import Test Data
 
 Put NDK import packages into:
 
@@ -550,7 +548,7 @@ run the owner normalization helper before retrying the process view:
 ./scripts/normalize-process-owners.sh
 ```
 
-## Step 9: Grant Public Full-Image Access
+## Post-Install Public Access
 
 After the first Kramerius boot and before testing public full-image access, run:
 
@@ -880,12 +878,49 @@ If small thumbnails return 500 and Kramerius logs show a GigaTIFF URL ending in
 `/full/`, make sure GigaTIFF includes the compatibility fallback for truncated
 Kramerius thumbnail URLs.
 
+## Upgrades
+
+Treat upgrades as clean rebuilds unless you intentionally want to preserve
+runtime databases and imported documents.
+
+Recommended upgrade flow:
+
+```bash
+cd /home/bezverec/services/kramerius-test
+git pull --ff-only
+./scripts/prepare-clean-stack.sh /home/bezverec/services/kramerius-test-clean-new
+cd /home/bezverec/services/kramerius-test-clean-new
+./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
+./scripts/build-clean-images.sh
+docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.clean.yml \
+  --profile bootstrap run --rm clean-bootstrap
+```
+
+For side-by-side testing, use alternate ports as shown in `Default Install`.
+After the new stack is verified, switch external routing or bookmarks to the new
+ports. Keep the previous stack directory until the new one is confirmed.
+
+When changing Kramerius, Solr, Keycloak or admin-client versions:
+
+- update image tags in the Compose files,
+- rebuild the Buildah images,
+- run `docker compose config --quiet`,
+- run `clean-bootstrap`,
+- check Solr logs for schema/index incompatibilities,
+- reimport or reindex test documents if the Solr schema changed.
+
+Do not copy old `mnt/containers/*` database or Solr index directories into a
+clean upgrade unless you are explicitly testing an in-place data migration.
+
 ## Stop and Cleanup
 
 Stop containers without deleting data:
 
 ```bash
-docker compose down
+docker compose -f docker-compose.yml -f docker-compose.clean.yml down
 docker compose -f docker-compose.gigatiff.yml down
 docker compose -f docker-compose.tools.yml --profile tools down
 ```
