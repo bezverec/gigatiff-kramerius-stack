@@ -1,11 +1,46 @@
-# Kramerius 7.2.1 Test Stack for GigaTIFF
+# GigaTIFF Kramerius Stack
 
-This repository contains a reproducible local or LAN test deployment for
-Kramerius 7.2.1 connected to the GigaTIFF IIIF image server.
+This repository contains a reproducible local or LAN test deployment for the
+GigaTIFF Kramerius Stack: Kramerius 7.2.1 connected to the GigaTIFF IIIF image
+server.
 
 It tracks configuration and installation scaffolding only. Runtime databases,
 Akubra object-store data, Solr indexes, imported NDK packages, generated JP2
 files, logs, caches and temporary files are intentionally ignored.
+
+## Versioning
+
+Stack version means a tested integration bundle. Component versions keep their
+own upstream meaning.
+
+Current bundle:
+
+```text
+GigaTIFF Kramerius Stack: stack-0.1.0
+Runtime directory:          gigatiff-kramerius
+```
+
+Compatibility matrix:
+
+```text
+Core:
+  Kramerius API:            7.2.1
+  Kramerius web client v3:  3.0.14-beta
+  Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
+  GigaTIFF server:          0.3.0
+
+Services:
+  Curator worker:           7.2.1
+  Public worker:            7.2.1
+  Process manager:          1.5
+  Solr:                     10.0.0
+  PostgreSQL:               18.4
+  Keycloak PostgreSQL:      14.10
+  Keycloak:                 22.0.11-1.10
+  Dragonfly:                1.30.3
+```
+
+The machine-readable source of truth is `versions.toml`.
 
 ## What This Stack Starts
 
@@ -24,6 +59,8 @@ files, logs, caches and temporary files are intentionally ignored.
 - `docker-compose.gigatiff.yml` - optional integrated GigaTIFF image server and Dragonfly cache.
 - `docker-compose.tools.yml` - optional Dockhand and Dashy tools.
 - `docker-compose.clean.yml` - clean-stack override for Buildah-built local images and bootstrap.
+- `docker-compose.ghcr.yml` - clean-stack override for prebuilt GHCR images.
+- `versions.toml` - stack version, component pins and GHCR image names.
 - `Containerfile.clean-bootstrap` - small Debian Trixie bootstrap image for post-start checks and SQL helpers.
 - `mnt/import/.kramerius4` - Kramerius runtime configuration mounted into API and workers.
 - `mnt/containers/solr/data` - Solr core configuration only, not generated indexes.
@@ -37,6 +74,7 @@ files, logs, caches and temporary files are intentionally ignored.
 - `ops/sql/grant-public-read.sql` - local test permission helper for public IMG_FULL access.
 - `ops/sql/normalize-process-owners.sql` - local process manager owner cleanup helper.
 - `scripts/build-clean-images.sh` - Buildah image builder for the clean stack.
+- `scripts/build-ghcr-images.sh` - Buildah image builder using the public GHCR image tags.
 - `scripts/prepare-clean-stack.sh` - creates a clean install directory from Git-managed files only.
 - `scripts/configure-endpoints.*` - helpers for switching between localhost and LAN URLs.
 - `scripts/grant-public-read.*` - helpers for applying the public read permission SQL.
@@ -163,6 +201,55 @@ localhost/gigatiff-kramerius-bootstrap:clean
 By default, it also publishes those images into the local Docker daemon so
 Docker Compose can run them. Set `PUSH_TO_DOCKER=0` if you only want Buildah
 storage images.
+
+### GHCR Images
+
+The same stack can use prebuilt images from GitHub Container Registry instead
+of local Buildah images.
+
+Published image names for `stack-0.1.0`:
+
+```text
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.0
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.0
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.0
+ghcr.io/bezverec/gigatiff-server:0.3.0
+```
+
+To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
+push a tag named like `stack-0.1.0`. The workflow reads `versions.toml`, checks
+out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
+adds OCI metadata, and publishes SBOM/provenance attestations.
+
+To build the same tags locally with Buildah:
+
+```bash
+./scripts/build-ghcr-images.sh
+```
+
+By default this builds the GHCR-tagged images and also publishes them into the
+local Docker daemon. To push to GHCR from a logged-in Buildah session:
+
+```bash
+buildah login ghcr.io
+PUSH_TO_GHCR=1 ./scripts/build-ghcr-images.sh
+```
+
+To run the stack from GHCR images instead of local Buildah images, add
+`docker-compose.ghcr.yml` after the clean and GigaTIFF files and explicitly
+disable local builds:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.clean.yml \
+  -f docker-compose.gigatiff.yml \
+  -f docker-compose.ghcr.yml \
+  up -d --pull always --no-build
+```
+
+The admin-client image is runtime-configured from `.env`, so the same GHCR image
+works for localhost and LAN deployments.
 
 Start the clean stack, including the GigaTIFF image server:
 
@@ -938,8 +1025,10 @@ ports. Keep the previous stack directory until the new one is confirmed.
 
 When changing Kramerius, Solr, Keycloak or admin-client versions:
 
+- update `versions.toml`,
 - update image tags in the Compose files,
 - rebuild the Buildah images,
+- republish GHCR images when the tested bundle changes,
 - run `docker compose config --quiet`,
 - run `clean-bootstrap`,
 - check Solr logs for schema/index incompatibilities,

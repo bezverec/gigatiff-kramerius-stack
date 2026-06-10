@@ -1,5 +1,10 @@
 FROM debian:trixie-slim
 
+LABEL org.opencontainers.image.title="GigaTIFF Kramerius Bootstrap" \
+      org.opencontainers.image.description="Bootstrap checks and local SQL helpers for the tested stack bundle" \
+      org.opencontainers.image.source="https://github.com/bezverec/gigatiff-kramerius-stack" \
+      org.opencontainers.image.licenses="MIT"
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
       ca-certificates \

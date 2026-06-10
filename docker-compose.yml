@@ -226,12 +226,12 @@ services:
     build:
       context: ../kramerius-admin-client
       dockerfile: ${ADMIN_CLIENT_DOCKERFILE:-../gigatiff-kramerius/ops/admin-client/Dockerfile.gigatiff}
-      args:
-        KRAMERIUS_PUBLIC_HOST: ${KRAMERIUS_PUBLIC_HOST:-127.0.0.1}
-        WEB_CLIENT_PORT: ${WEB_CLIENT_PORT:-1234}
-        ADMIN_CLIENT_PORT: ${ADMIN_CLIENT_PORT:-1235}
-        KRAMERIUS_API_PORT: ${KRAMERIUS_API_PORT:-8088}
     image: gigatiff-kramerius-admin-client:local
+    environment:
+      KRAMERIUS_PUBLIC_HOST: ${KRAMERIUS_PUBLIC_HOST:-127.0.0.1}
+      WEB_CLIENT_PORT: ${WEB_CLIENT_PORT:-1234}
+      ADMIN_CLIENT_PORT: ${ADMIN_CLIENT_PORT:-1235}
+      KRAMERIUS_API_PORT: ${KRAMERIUS_API_PORT:-8088}
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${ADMIN_CLIENT_PORT:-1235}:80"
     extra_hosts:

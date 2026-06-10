@@ -8,21 +8,21 @@ RUN npm run build
 
 FROM httpd:2.4
 
-ARG KRAMERIUS_PUBLIC_HOST=127.0.0.1
-ARG WEB_CLIENT_PORT=1234
-ARG ADMIN_CLIENT_PORT=1235
-ARG KRAMERIUS_API_PORT=8088
-
 COPY --from=build /app/dist/kramerius-admin-client/browser/ /usr/local/apache2/htdocs/
 
 RUN set -eux; \
     mkdir -p /usr/local/apache2/htdocs/assets/shared; \
-    printf '%s\n' \
+    printf '%s\n' '#!/bin/sh' \
+      'set -eu' \
+      ': "${KRAMERIUS_PUBLIC_HOST:=127.0.0.1}"' \
+      ': "${WEB_CLIENT_PORT:=1234}"' \
+      ': "${KRAMERIUS_API_PORT:=8088}"' \
+      'cat > /usr/local/apache2/htdocs/assets/shared/globals.js <<EOF' \
       'var APP_GLOBAL = {' \
-      "  userClientBaseUrl: 'http://${KRAMERIUS_PUBLIC_HOST}:${WEB_CLIENT_PORT}'," \
+      "  userClientBaseUrl: 'http://\${KRAMERIUS_PUBLIC_HOST}:\${WEB_CLIENT_PORT}'," \
       "  deployPath: ''," \
-      "  coreBaseUrl: 'http://${KRAMERIUS_PUBLIC_HOST}:${KRAMERIUS_API_PORT}/search'," \
-      "  cdkApiBaseUrl: 'http://${KRAMERIUS_PUBLIC_HOST}:${KRAMERIUS_API_PORT}/search'," \
+      "  coreBaseUrl: 'http://\${KRAMERIUS_PUBLIC_HOST}:\${KRAMERIUS_API_PORT}/search'," \
+      "  cdkApiBaseUrl: 'http://\${KRAMERIUS_PUBLIC_HOST}:\${KRAMERIUS_API_PORT}/search'," \
       "  keycloak: false," \
       "  lang: 'cs'," \
       "  languages: ['cs', 'en']," \
@@ -30,7 +30,10 @@ RUN set -eux; \
       "  devMode: false," \
       "  krameriusInstance: 'GigaTIFF'" \
       '};' \
-      > /usr/local/apache2/htdocs/assets/shared/globals.js; \
+      'EOF' \
+      'exec httpd-foreground' \
+      > /usr/local/bin/gigatiff-admin-entrypoint; \
+    chmod +x /usr/local/bin/gigatiff-admin-entrypoint; \
     printf '%s\n' \
       '<VirtualHost *:80>' \
       '  DocumentRoot /usr/local/apache2/htdocs' \
@@ -38,3 +41,5 @@ RUN set -eux; \
       '</VirtualHost>' \
       > /usr/local/apache2/conf/extra/gigatiff-fallback.conf; \
     printf '%s\n' 'Include conf/extra/gigatiff-fallback.conf' >> /usr/local/apache2/conf/httpd.conf
+
+ENTRYPOINT ["/usr/local/bin/gigatiff-admin-entrypoint"]
