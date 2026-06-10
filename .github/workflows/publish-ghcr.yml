@@ -14,9 +14,21 @@ env:
   PLATFORMS: linux/amd64
 
 jobs:
-  publish:
-    name: Build and publish
+  versions:
+    name: Read version lock
     runs-on: ubuntu-24.04
+    outputs:
+      stack_version: ${{ steps.versions.outputs.stack_version }}
+      registry_namespace: ${{ steps.versions.outputs.registry_namespace }}
+      web_client_image: ${{ steps.versions.outputs.web_client_image }}
+      admin_client_image: ${{ steps.versions.outputs.admin_client_image }}
+      bootstrap_image: ${{ steps.versions.outputs.bootstrap_image }}
+      gigatiff_server_image: ${{ steps.versions.outputs.gigatiff_server_image }}
+      admin_client_ref: ${{ steps.versions.outputs.admin_client_ref }}
+      gigatiff_ref: ${{ steps.versions.outputs.gigatiff_ref }}
+      gigatiff_server_version: ${{ steps.versions.outputs.gigatiff_server_version }}
+      source_repository: ${{ steps.versions.outputs.source_repository }}
+      gigatiff_repository: ${{ steps.versions.outputs.gigatiff_repository }}
 
     steps:
       - name: Checkout stack
@@ -55,19 +67,23 @@ jobs:
                   handle.write(f"{key}={value}\n")
           PY
 
+  stack-images:
+    name: Build stack images
+    runs-on: ubuntu-24.04
+    needs: versions
+
+    steps:
+      - name: Checkout stack
+        uses: actions/checkout@v4
+        with:
+          path: stack
+
       - name: Checkout admin client
         uses: actions/checkout@v4
         with:
           repository: ceskaexpedice/kramerius-admin-client
-          ref: ${{ steps.versions.outputs.admin_client_ref }}
+          ref: ${{ needs.versions.outputs.admin_client_ref }}
           path: kramerius-admin-client
-
-      - name: Checkout GigaTIFF
-        uses: actions/checkout@v4
-        with:
-          repository: bezverec/gigatiff
-          ref: ${{ steps.versions.outputs.gigatiff_ref }}
-          path: gigatiff
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -86,12 +102,12 @@ jobs:
           file: stack/Dockerfile.web-client-gigatiff
           platforms: ${{ env.PLATFORMS }}
           push: true
-          tags: ${{ steps.versions.outputs.registry_namespace }}/${{ steps.versions.outputs.web_client_image }}:${{ steps.versions.outputs.stack_version }}
+          tags: ${{ needs.versions.outputs.registry_namespace }}/${{ needs.versions.outputs.web_client_image }}:${{ needs.versions.outputs.stack_version }}
           labels: |
             org.opencontainers.image.title=GigaTIFF Kramerius Web Client
             org.opencontainers.image.description=GigaTIFF-branded Kramerius web client for the tested stack bundle
-            org.opencontainers.image.source=${{ steps.versions.outputs.source_repository }}
-            org.opencontainers.image.version=${{ steps.versions.outputs.stack_version }}
+            org.opencontainers.image.source=${{ needs.versions.outputs.source_repository }}
+            org.opencontainers.image.version=${{ needs.versions.outputs.stack_version }}
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha,scope=gigatiff-kramerius-web-client
           cache-to: type=gha,mode=max,scope=gigatiff-kramerius-web-client
@@ -105,12 +121,12 @@ jobs:
           file: stack/ops/admin-client/Dockerfile.gigatiff
           platforms: ${{ env.PLATFORMS }}
           push: true
-          tags: ${{ steps.versions.outputs.registry_namespace }}/${{ steps.versions.outputs.admin_client_image }}:${{ steps.versions.outputs.stack_version }}
+          tags: ${{ needs.versions.outputs.registry_namespace }}/${{ needs.versions.outputs.admin_client_image }}:${{ needs.versions.outputs.stack_version }}
           labels: |
             org.opencontainers.image.title=GigaTIFF Kramerius Admin Client
             org.opencontainers.image.description=Kramerius admin client configured for the GigaTIFF Kramerius Stack
-            org.opencontainers.image.source=${{ steps.versions.outputs.source_repository }}
-            org.opencontainers.image.version=${{ steps.versions.outputs.stack_version }}
+            org.opencontainers.image.source=${{ needs.versions.outputs.source_repository }}
+            org.opencontainers.image.version=${{ needs.versions.outputs.stack_version }}
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha,scope=gigatiff-kramerius-admin-client
           cache-to: type=gha,mode=max,scope=gigatiff-kramerius-admin-client
@@ -124,17 +140,40 @@ jobs:
           file: stack/Containerfile.clean-bootstrap
           platforms: ${{ env.PLATFORMS }}
           push: true
-          tags: ${{ steps.versions.outputs.registry_namespace }}/${{ steps.versions.outputs.bootstrap_image }}:${{ steps.versions.outputs.stack_version }}
+          tags: ${{ needs.versions.outputs.registry_namespace }}/${{ needs.versions.outputs.bootstrap_image }}:${{ needs.versions.outputs.stack_version }}
           labels: |
             org.opencontainers.image.title=GigaTIFF Kramerius Bootstrap
             org.opencontainers.image.description=Bootstrap checks and local SQL helpers for the tested stack bundle
-            org.opencontainers.image.source=${{ steps.versions.outputs.source_repository }}
-            org.opencontainers.image.version=${{ steps.versions.outputs.stack_version }}
+            org.opencontainers.image.source=${{ needs.versions.outputs.source_repository }}
+            org.opencontainers.image.version=${{ needs.versions.outputs.stack_version }}
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha,scope=gigatiff-kramerius-bootstrap
           cache-to: type=gha,mode=max,scope=gigatiff-kramerius-bootstrap
           sbom: true
           provenance: true
+
+  gigatiff-server:
+    name: Build GigaTIFF server image
+    runs-on: ubuntu-24.04
+    needs: versions
+
+    steps:
+      - name: Checkout GigaTIFF
+        uses: actions/checkout@v4
+        with:
+          repository: bezverec/gigatiff
+          ref: ${{ needs.versions.outputs.gigatiff_ref }}
+          path: gigatiff
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish GigaTIFF server
         uses: docker/build-push-action@v6
@@ -143,17 +182,18 @@ jobs:
           file: gigatiff/Dockerfile
           platforms: ${{ env.PLATFORMS }}
           push: true
-          tags: ${{ steps.versions.outputs.registry_namespace }}/${{ steps.versions.outputs.gigatiff_server_image }}:${{ steps.versions.outputs.gigatiff_server_version }}
+          tags: ${{ needs.versions.outputs.registry_namespace }}/${{ needs.versions.outputs.gigatiff_server_image }}:${{ needs.versions.outputs.gigatiff_server_version }}
           build-args: |
             GIGATIFF_BUILD_GROK=1
+            GIGATIFF_BUILD_JOBS=2
             GIGATIFF_SERVER_FEATURES=jpeg2000-grok-ffi
           labels: |
             org.opencontainers.image.title=GigaTIFF Server
             org.opencontainers.image.description=IIIF-compatible TIFF/BigTIFF/JPEG2000 image server
-            org.opencontainers.image.source=${{ steps.versions.outputs.gigatiff_repository }}
-            org.opencontainers.image.version=${{ steps.versions.outputs.gigatiff_server_version }}
+            org.opencontainers.image.source=${{ needs.versions.outputs.gigatiff_repository }}
+            org.opencontainers.image.version=${{ needs.versions.outputs.gigatiff_server_version }}
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha,scope=gigatiff-server
-          cache-to: type=gha,mode=max,scope=gigatiff-server
+          cache-to: type=gha,mode=min,scope=gigatiff-server
           sbom: true
           provenance: true

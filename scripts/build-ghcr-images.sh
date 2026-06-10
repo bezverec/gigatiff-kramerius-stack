@@ -79,6 +79,7 @@ echo "Building $GIGATIFF_IMAGE"
 buildah bud \
   -t "$GIGATIFF_IMAGE" \
   --build-arg "GIGATIFF_BUILD_GROK=${GIGATIFF_BUILD_GROK:-1}" \
+  --build-arg "GIGATIFF_BUILD_JOBS=${GIGATIFF_BUILD_JOBS:-2}" \
   --build-arg "GIGATIFF_SERVER_FEATURES=${GIGATIFF_SERVER_FEATURES:-jpeg2000-grok-ffi}" \
   --label "org.opencontainers.image.source=$(read_version core gigatiff_repository)" \
   --label "org.opencontainers.image.version=$GIGATIFF_SERVER_VERSION" \
