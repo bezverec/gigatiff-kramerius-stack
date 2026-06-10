@@ -51,15 +51,18 @@ Install:
 - Git.
 - PowerShell 7 or a POSIX shell, depending on which helper scripts you use.
 
-Clone the required repositories side by side:
+Clone the required repositories side by side. Keep the source checkout and the
+runtime deployment directory clearly separated; the examples use
+`kramerius-test-src` for the Git checkout and `gigatiff-kramerius` for the live
+Compose stack.
 
 ```bash
 mkdir services
 cd services
 git clone https://github.com/bezverec/gigatiff.git
-git clone https://github.com/bezverec/kramerius-test.git
+git clone https://github.com/bezverec/kramerius-test.git kramerius-test-src
 git clone https://github.com/ceskaexpedice/kramerius-admin-client.git
-cd kramerius-test
+cd kramerius-test-src
 ```
 
 Expected layout:
@@ -67,7 +70,7 @@ Expected layout:
 ```text
 services/
   gigatiff/
-  kramerius-test/
+  kramerius-test-src/
   kramerius-admin-client/
 ```
 
@@ -104,11 +107,11 @@ It deliberately excludes:
 - GigaTIFF response cache,
 - logs or temporary files.
 
-From the repository checkout, prepare a clean install directory:
+From the repository checkout, prepare a clean runtime directory:
 
 ```bash
-./scripts/prepare-clean-stack.sh /home/bezverec/services/kramerius-test-clean
-cd /home/bezverec/services/kramerius-test-clean
+./scripts/prepare-clean-stack.sh /home/bezverec/services/gigatiff-kramerius
+cd /home/bezverec/services/gigatiff-kramerius
 ```
 
 Configure endpoint URLs for the target host:
@@ -458,13 +461,13 @@ Dockhand gets the local compose stack registered automatically by
 `dockhand-init`. The repo is mounted into the Dockhand container at:
 
 ```text
-/workspace/kramerius-test
+/workspace/gigatiff-kramerius
 ```
 
 The registered stack points Dockhand at:
 
 ```text
-/workspace/kramerius-test/docker-compose.yml
+/workspace/gigatiff-kramerius/docker-compose.yml
 ```
 
 For the clean Buildah stack, add `docker-compose.clean.yml` in Dockhand when you
@@ -473,7 +476,7 @@ edit the registered stack.
 If a `.env` file exists in the repository root, `dockhand-init` registers it as:
 
 ```text
-/workspace/kramerius-test/.env
+/workspace/gigatiff-kramerius/.env
 ```
 
 The Docker socket is mounted into Dockhand, so it should manage the local Docker
@@ -912,10 +915,10 @@ runtime databases and imported documents.
 Recommended upgrade flow:
 
 ```bash
-cd /home/bezverec/services/kramerius-test
+cd /home/bezverec/services/kramerius-test-src
 git pull --ff-only
-./scripts/prepare-clean-stack.sh /home/bezverec/services/kramerius-test-clean-new
-cd /home/bezverec/services/kramerius-test-clean-new
+./scripts/prepare-clean-stack.sh /home/bezverec/services/gigatiff-kramerius-new
+cd /home/bezverec/services/gigatiff-kramerius-new
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
 ./scripts/build-clean-images.sh
 docker compose \

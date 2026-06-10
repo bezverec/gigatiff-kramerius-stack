@@ -25,7 +25,7 @@ fi
 
 if [ ! -d "$ADMIN_CLIENT_DIR" ]; then
   echo "admin client checkout not found: $ADMIN_CLIENT_DIR" >&2
-  echo "Set ADMIN_CLIENT_DIR or clone https://github.com/ceskaexpedice/kramerius-admin-client.git next to kramerius-test." >&2
+  echo "Set ADMIN_CLIENT_DIR or clone https://github.com/ceskaexpedice/kramerius-admin-client.git next to the runtime directory." >&2
   exit 1
 fi
 

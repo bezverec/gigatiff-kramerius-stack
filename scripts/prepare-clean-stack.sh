@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="${1:-}"
 
 if [ -z "$DEST" ]; then
-  echo "Usage: $0 /path/to/clean/kramerius-test" >&2
+  echo "Usage: $0 /path/to/gigatiff-kramerius" >&2
   exit 1
 fi
 
@@ -71,5 +71,5 @@ echo "Next:"
 echo "  cd $DEST"
 echo "  ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0"
 echo "  ./scripts/build-clean-images.sh"
-echo "  docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d"
-echo "  docker compose -f docker-compose.yml -f docker-compose.clean.yml run --rm clean-bootstrap"
+echo "  docker compose -f docker-compose.yml -f docker-compose.clean.yml -f docker-compose.gigatiff.yml up -d"
+echo "  docker compose -f docker-compose.yml -f docker-compose.clean.yml --profile bootstrap run --rm clean-bootstrap"

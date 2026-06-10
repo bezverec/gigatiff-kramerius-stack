@@ -3,9 +3,9 @@ set -eu
 
 db="${DOCKHAND_DB:-/app/data/db/dockhand.db}"
 env_name="${DOCKHAND_ENVIRONMENT_NAME:-Local Docker}"
-stack_name="${DOCKHAND_STACK_NAME:-kramerius-test}"
-compose_path="${DOCKHAND_STACK_COMPOSE_PATH:-/workspace/kramerius-test/docker-compose.yml}"
-env_path="${DOCKHAND_STACK_ENV_PATH:-/workspace/kramerius-test/.env}"
+stack_name="${DOCKHAND_STACK_NAME:-gigatiff-kramerius}"
+compose_path="${DOCKHAND_STACK_COMPOSE_PATH:-/workspace/gigatiff-kramerius/docker-compose.yml}"
+env_path="${DOCKHAND_STACK_ENV_PATH:-/workspace/gigatiff-kramerius/.env}"
 env_path_sql="NULL"
 
 if [ -f "$env_path" ]; then

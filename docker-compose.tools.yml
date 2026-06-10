@@ -3,20 +3,20 @@ services:
     profiles:
       - tools
     image: fnsys/dockhand:latest
-    container_name: kramerius-test-dockhand
+    container_name: gigatiff-kramerius-dockhand
     restart: unless-stopped
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${DOCKHAND_PORT:-3000}:3000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - dockhand_data:/app/data
-      - ./:/workspace/kramerius-test:ro
+      - ./:/workspace/gigatiff-kramerius:ro
 
   dockhand-init:
     profiles:
       - tools
     image: fnsys/dockhand:latest
-    container_name: kramerius-test-dockhand-init
+    container_name: gigatiff-kramerius-dockhand-init
     depends_on:
       - dockhand
     restart: "no"
@@ -29,7 +29,7 @@ services:
     profiles:
       - tools
     image: lissy93/dashy:latest
-    container_name: kramerius-test-dashy
+    container_name: gigatiff-kramerius-dashy
     restart: unless-stopped
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${DASHY_PORT:-18080}:8080"
