@@ -373,13 +373,12 @@ For a LAN deployment, replace `127.0.0.1` with `KRAMERIUS_PUBLIC_HOST`.
 Put NDK import packages into:
 
 ```text
-mnt/import/.kramerius4/import
+mnt/import/.kramerius4/convert
 ```
 
 Generated conversion output is written under:
 
 ```text
-mnt/import/.kramerius4/convert
 mnt/imageserver/iip-data
 ```
 
