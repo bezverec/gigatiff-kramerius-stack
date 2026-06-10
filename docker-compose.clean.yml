@@ -1,0 +1,52 @@
+services:
+  keycloak_eduid:
+    volumes:
+      - ./ops/keycloak:/opt/keycloak/data/import:ro
+    entrypoint:
+      - /opt/keycloak/bin/eduid.sh
+      - start
+      - --db-url=jdbc:postgresql://keycloakPostgres_eduid:5432/keycloak
+      - --db-username=keycloak
+      - --db-password=keycloak
+      - --proxy=edge
+      - --import-realm
+
+  web-client:
+    image: localhost/gigatiff-kramerius-web-client:clean
+
+  admin-client:
+    image: localhost/gigatiff-kramerius-admin-client:clean
+
+  clean-bootstrap:
+    image: localhost/gigatiff-kramerius-bootstrap:clean
+    profiles:
+      - bootstrap
+    restart: "no"
+    depends_on:
+      kramerius:
+        condition: service_started
+      solr:
+        condition: service_healthy
+      keycloak_eduid:
+        condition: service_healthy
+      krameriusPostgres:
+        condition: service_started
+      processPostgres:
+        condition: service_healthy
+    environment:
+      KRAMERIUS_DB_HOST: krameriusPostgres
+      KRAMERIUS_DB_PORT: "5432"
+      KRAMERIUS_DB_NAME: kramerius
+      KRAMERIUS_DB_USER: fedoraAdmin
+      KRAMERIUS_DB_PASSWORD: fedoraAdmin
+      PROCESS_DB_HOST: processPostgres
+      PROCESS_DB_PORT: "5432"
+      PROCESS_DB_NAME: process
+      PROCESS_DB_USER: process
+      PROCESS_DB_PASSWORD: process
+      SOLR_URL: http://solr:8983/solr
+      KEYCLOAK_URL: http://keycloak_eduid:8990
+      KEYCLOAK_REALM: kramerius
+      KRAMERIUS_HEALTH_URL: http://kramerius:8080/search/api/client/v7.0/info
+    volumes:
+      - ./ops/sql:/ops/sql:ro

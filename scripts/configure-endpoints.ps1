@@ -4,9 +4,22 @@ param(
     [int]$WebClientPort = 1234,
     [int]$AdminClientPort = 1235,
     [int]$KrameriusApiPort = 8088,
+    [int]$KrameriusDebugPort = 5005,
+    [int]$KrameriusAjpPort = 8009,
     [string]$KeycloakPublicHost = "keycloak.localhost",
     [int]$KeycloakPort = 8990,
+    [int]$SolrPort = 8983,
+    [int]$LockServerPort1 = 5701,
+    [int]$LockServerPort2 = 5702,
+    [int]$LockServerPort3 = 5703,
+    [int]$ProcessManagerPort = 8082,
+    [int]$CuratorWorkerPort = 8084,
+    [int]$PublicWorkerPort = 8086,
+    [int]$KrameriusDbPort = 15432,
+    [int]$ProcessDbPort = 25432,
     [int]$GigaTiffPort = 18082,
+    [int]$DockhandPort = 3000,
+    [int]$DashyPort = 18080,
     [string]$GigaTiffInternalBaseUrl = ""
 )
 
@@ -46,20 +59,25 @@ if (-not $GigaTiffInternalBaseUrl) {
     "WEB_CLIENT_PORT=$WebClientPort"
     "ADMIN_CLIENT_PORT=$AdminClientPort"
     "KRAMERIUS_API_PORT=$KrameriusApiPort"
+    "KRAMERIUS_DEBUG_PORT=$KrameriusDebugPort"
+    "KRAMERIUS_AJP_PORT=$KrameriusAjpPort"
     "KEYCLOAK_PUBLIC_HOST=$KeycloakPublicHost"
     "KEYCLOAK_PORT=$KeycloakPort"
-    "SOLR_PORT=8983"
-    "PROCESS_MANAGER_PORT=8082"
-    "CURATOR_WORKER_PORT=8084"
-    "PUBLIC_WORKER_PORT=8086"
-    "KRAMERIUS_DB_PORT=15432"
-    "PROCESS_DB_PORT=25432"
+    "SOLR_PORT=$SolrPort"
+    "LOCK_SERVER_PORT_1=$LockServerPort1"
+    "LOCK_SERVER_PORT_2=$LockServerPort2"
+    "LOCK_SERVER_PORT_3=$LockServerPort3"
+    "PROCESS_MANAGER_PORT=$ProcessManagerPort"
+    "CURATOR_WORKER_PORT=$CuratorWorkerPort"
+    "PUBLIC_WORKER_PORT=$PublicWorkerPort"
+    "KRAMERIUS_DB_PORT=$KrameriusDbPort"
+    "PROCESS_DB_PORT=$ProcessDbPort"
     "GIGATIFF_PORT=$GigaTiffPort"
     "GIGATIFF_INTERNAL_BASE_URL=$GigaTiffInternalBaseUrl"
     "GIGATIFF_SOURCE_DIR=../gigatiff"
     "GIGATIFF_CACHE_NAMESPACE=gigatiff-server-response-v12-jp2-auto-fix"
-    "DOCKHAND_PORT=3000"
-    "DASHY_PORT=18080"
+    "DOCKHAND_PORT=$DockhandPort"
+    "DASHY_PORT=$DashyPort"
 ) | Set-Content -LiteralPath $envPath -Encoding UTF8
 
 $migration = Join-Path $Root "mnt/import/.kramerius4/migration.properties"
@@ -93,7 +111,8 @@ $config | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $configMain -Encod
 
 $libraries = Join-Path $Root "public/local-config/libraries.json"
 $libraryJson = Get-Content -LiteralPath $libraries -Raw | ConvertFrom-Json
-foreach ($library in $libraryJson) {
+$libraryItems = if ($libraryJson -is [System.Array]) { $libraryJson } else { @($libraryJson) }
+foreach ($library in $libraryItems) {
     $library.name = "GigaTIFF"
     $library.name_en = "GigaTIFF"
     $library.new_client_url = "http://${PublicHost}:$WebClientPort"

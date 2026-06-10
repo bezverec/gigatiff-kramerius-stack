@@ -1,0 +1,15 @@
+FROM debian:trixie-slim
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+      ca-certificates \
+      curl \
+      jq \
+      postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ops/bootstrap/bootstrap.sh /usr/local/bin/kramerius-clean-bootstrap
+
+RUN chmod +x /usr/local/bin/kramerius-clean-bootstrap
+
+ENTRYPOINT ["/usr/local/bin/kramerius-clean-bootstrap"]

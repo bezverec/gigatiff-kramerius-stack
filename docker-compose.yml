@@ -114,9 +114,9 @@ services:
   lock_server:
     image: "ceskaexpedice/hazelcast-locks-server:2.0"
     ports:
-      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:5701:5701"
-      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:5702:5702"
-      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:5703:5703"
+      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${LOCK_SERVER_PORT_1:-5701}:5701"
+      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${LOCK_SERVER_PORT_2:-5702}:5702"
+      - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${LOCK_SERVER_PORT_3:-5703}:5703"
     restart: "always"
 
   processPostgres:
