@@ -298,6 +298,13 @@ keycloak.clientId=krameriusClient
 keycloak.tokenurl=http://keycloak.localhost:8990/realms/kramerius/protocol/openid-connect/token
 ```
 
+For a LAN clean stack, the generated token URL uses the LAN host instead, for
+example:
+
+```properties
+keycloak.tokenurl=http://10.0.120.30:28990/realms/kramerius/protocol/openid-connect/token
+```
+
 and:
 
 ```json
@@ -312,8 +319,13 @@ and:
 ```
 
 `keycloak.localhost` is intentional for local Docker use: it is resolvable from
-both the host browser and the Kramerius container. The endpoint helper keeps it
-separate from `KRAMERIUS_PUBLIC_HOST` through `KEYCLOAK_PUBLIC_HOST`.
+both the host browser and the Kramerius container when the browser runs on the
+same machine. For LAN deployments, the endpoint helper defaults
+`KEYCLOAK_PUBLIC_HOST` to `KRAMERIUS_PUBLIC_HOST`, for example
+`10.0.120.30`, so OAuth redirects are reachable from other computers.
+
+Override `KEYCLOAK_PUBLIC_HOST` explicitly only when Keycloak should be exposed
+through a different DNS name or reverse proxy.
 
 ### Development Compose Workflow
 
@@ -824,14 +836,16 @@ curl http://127.0.0.1:18082/readyz
 curl http://127.0.0.1:18082/metrics
 ```
 
-If login redirects should use a LAN hostname instead of `keycloak.localhost`,
-set `KEYCLOAK_PUBLIC_HOST` and rerun:
+If login redirects still use `keycloak.localhost` from a LAN browser, rerun the
+endpoint helper with the LAN host and restart Keycloak plus Kramerius:
 
 ```bash
-export KEYCLOAK_PUBLIC_HOST=10.0.120.30
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
-docker compose up -d --build web-client admin-client keycloak_eduid kramerius
+docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d keycloak_eduid kramerius web-client admin-client
 ```
+
+For the side-by-side ZimaBoard clean stack, keep the alternate ports in `.env`
+when rerunning the helper.
 
 Use one browser hostname consistently during login. Mixing `127.0.0.1`,
 `localhost`, `keycloak.localhost` and a LAN IP in the same login flow can leave

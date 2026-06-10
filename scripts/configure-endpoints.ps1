@@ -6,7 +6,7 @@ param(
     [int]$KrameriusApiPort = 8088,
     [int]$KrameriusDebugPort = 5005,
     [int]$KrameriusAjpPort = 8009,
-    [string]$KeycloakPublicHost = "keycloak.localhost",
+    [string]$KeycloakPublicHost = "",
     [int]$KeycloakPort = 8990,
     [int]$SolrPort = 8983,
     [int]$LockServerPort1 = 5701,
@@ -53,6 +53,13 @@ $envPath = Join-Path $Root ".env"
 if (-not $GigaTiffInternalBaseUrl) {
     $GigaTiffInternalBaseUrl = "http://host.docker.internal:$GigaTiffPort/iiif/3"
 }
+if (-not $KeycloakPublicHost) {
+    if ($PublicHost -eq "127.0.0.1" -or $PublicHost -eq "localhost") {
+        $KeycloakPublicHost = "keycloak.localhost"
+    } else {
+        $KeycloakPublicHost = $PublicHost
+    }
+}
 @(
     "KRAMERIUS_BIND_ADDR=$BindAddr"
     "KRAMERIUS_PUBLIC_HOST=$PublicHost"
@@ -94,6 +101,9 @@ Set-Content -LiteralPath $rewrite -Encoding UTF8 -NoNewline -Value $rewriteText.
 
 $configuration = Join-Path $Root "mnt/import/.kramerius4/configuration.properties"
 Set-PropertyLine $configuration "client" "http://${PublicHost}:$WebClientPort/"
+Set-PropertyLine $configuration "keycloak.realm" "kramerius"
+Set-PropertyLine $configuration "keycloak.clientId" "krameriusClient"
+Set-PropertyLine $configuration "keycloak.tokenurl" "http://${KeycloakPublicHost}:$KeycloakPort/realms/kramerius/protocol/openid-connect/token"
 
 $keycloak = Join-Path $Root "mnt/import/.kramerius4/keycloak.json"
 $keycloakJson = Get-Content -LiteralPath $keycloak -Raw | ConvertFrom-Json

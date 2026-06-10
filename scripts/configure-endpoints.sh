@@ -10,7 +10,13 @@ admin_port="${ADMIN_CLIENT_PORT:-1235}"
 api_port="${KRAMERIUS_API_PORT:-8088}"
 debug_port="${KRAMERIUS_DEBUG_PORT:-5005}"
 ajp_port="${KRAMERIUS_AJP_PORT:-8009}"
-keycloak_host="${KEYCLOAK_PUBLIC_HOST:-keycloak.localhost}"
+if [ -n "${KEYCLOAK_PUBLIC_HOST:-}" ]; then
+    keycloak_host="$KEYCLOAK_PUBLIC_HOST"
+elif [ "$public_host" = "127.0.0.1" ] || [ "$public_host" = "localhost" ]; then
+    keycloak_host="keycloak.localhost"
+else
+    keycloak_host="$public_host"
+fi
 keycloak_port="${KEYCLOAK_PORT:-8990}"
 solr_port="${SOLR_PORT:-8983}"
 lock_port_1="${LOCK_SERVER_PORT_1:-5701}"
@@ -94,6 +100,9 @@ rewrite.write_text(
 
 configuration = root / "mnt/import/.kramerius4/configuration.properties"
 set_prop(configuration, "client", f"http://{host}:{web_port}/")
+set_prop(configuration, "keycloak.realm", "kramerius")
+set_prop(configuration, "keycloak.clientId", "krameriusClient")
+set_prop(configuration, "keycloak.tokenurl", f"http://{keycloak_host}:{keycloak_port}/realms/kramerius/protocol/openid-connect/token")
 
 keycloak = root / "mnt/import/.kramerius4/keycloak.json"
 keycloak_json = json.loads(read_text(keycloak))
