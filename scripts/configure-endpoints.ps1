@@ -82,7 +82,7 @@ if (-not $KeycloakPublicHost) {
     "PROCESS_DB_PORT=$ProcessDbPort"
     "GIGATIFF_PORT=$GigaTiffPort"
     "GHCR_NAMESPACE=ghcr.io/bezverec"
-    "STACK_VERSION=stack-0.1.2"
+    "STACK_VERSION=stack-0.1.3"
     "GIGATIFF_SERVER_VERSION=0.3.0"
     "GIGATIFF_INTERNAL_BASE_URL=$GigaTiffInternalBaseUrl"
     "GIGATIFF_SOURCE_DIR=../gigatiff"
