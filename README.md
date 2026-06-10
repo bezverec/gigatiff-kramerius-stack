@@ -53,16 +53,16 @@ Install:
 
 Clone the required repositories side by side. Keep the source checkout and the
 runtime deployment directory clearly separated; the examples use
-`kramerius-test-src` for the Git checkout and `gigatiff-kramerius` for the live
-Compose stack.
+`gigatiff-kramerius-stack-src` for the Git checkout and `gigatiff-kramerius`
+for the live Compose stack.
 
 ```bash
 mkdir services
 cd services
 git clone https://github.com/bezverec/gigatiff.git
-git clone https://github.com/bezverec/kramerius-test.git kramerius-test-src
+git clone https://github.com/bezverec/gigatiff-kramerius-stack.git gigatiff-kramerius-stack-src
 git clone https://github.com/ceskaexpedice/kramerius-admin-client.git
-cd kramerius-test-src
+cd gigatiff-kramerius-stack-src
 ```
 
 Expected layout:
@@ -70,7 +70,7 @@ Expected layout:
 ```text
 services/
   gigatiff/
-  kramerius-test-src/
+  gigatiff-kramerius-stack-src/
   kramerius-admin-client/
 ```
 
@@ -915,7 +915,7 @@ runtime databases and imported documents.
 Recommended upgrade flow:
 
 ```bash
-cd /home/bezverec/services/kramerius-test-src
+cd /home/bezverec/services/gigatiff-kramerius-stack-src
 git pull --ff-only
 ./scripts/prepare-clean-stack.sh /home/bezverec/services/gigatiff-kramerius-new
 cd /home/bezverec/services/gigatiff-kramerius-new

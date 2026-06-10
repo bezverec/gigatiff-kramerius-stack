@@ -4,6 +4,7 @@ set -euo pipefail
 public_host="${1:-127.0.0.1}"
 bind_addr="${2:-127.0.0.1}"
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+stack_dir_name="$(basename "$root")"
 
 web_port="${WEB_CLIENT_PORT:-1234}"
 admin_port="${ADMIN_CLIENT_PORT:-1235}"
@@ -55,6 +56,7 @@ GIGATIFF_PORT=$gigatiff_port
 GIGATIFF_INTERNAL_BASE_URL=$gigatiff_internal_base
 GIGATIFF_SOURCE_DIR=../gigatiff
 GIGATIFF_CACHE_NAMESPACE=gigatiff-server-response-v12-jp2-auto-fix
+ADMIN_CLIENT_DOCKERFILE=../${stack_dir_name}/ops/admin-client/Dockerfile.gigatiff
 DOCKHAND_PORT=$dockhand_port
 DASHY_PORT=$dashy_port
 EOF

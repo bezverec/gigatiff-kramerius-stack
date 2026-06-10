@@ -25,6 +25,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent $PSScriptRoot
+$StackDirName = Split-Path -Leaf $Root
 
 function Set-PropertyLine {
     param(
@@ -83,6 +84,7 @@ if (-not $KeycloakPublicHost) {
     "GIGATIFF_INTERNAL_BASE_URL=$GigaTiffInternalBaseUrl"
     "GIGATIFF_SOURCE_DIR=../gigatiff"
     "GIGATIFF_CACHE_NAMESPACE=gigatiff-server-response-v12-jp2-auto-fix"
+    "ADMIN_CLIENT_DOCKERFILE=../$StackDirName/ops/admin-client/Dockerfile.gigatiff"
     "DOCKHAND_PORT=$DockhandPort"
     "DASHY_PORT=$DashyPort"
 ) | Set-Content -LiteralPath $envPath -Encoding UTF8

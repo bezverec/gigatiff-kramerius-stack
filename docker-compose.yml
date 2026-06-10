@@ -225,7 +225,7 @@ services:
   admin-client:
     build:
       context: ../kramerius-admin-client
-      dockerfile: ../kramerius-test/ops/admin-client/Dockerfile.gigatiff
+      dockerfile: ${ADMIN_CLIENT_DOCKERFILE:-../gigatiff-kramerius/ops/admin-client/Dockerfile.gigatiff}
       args:
         KRAMERIUS_PUBLIC_HOST: ${KRAMERIUS_PUBLIC_HOST:-127.0.0.1}
         WEB_CLIENT_PORT: ${WEB_CLIENT_PORT:-1234}
