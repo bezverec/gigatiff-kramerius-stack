@@ -15,7 +15,7 @@ files, logs, caches and temporary files are intentionally ignored.
 - Keycloak for OAuth2 authentication.
 - Kramerius web client with GigaTIFF branding.
 - Kramerius admin client.
-- Optional GigaTIFF IIIF image server with Dragonfly response cache.
+- GigaTIFF IIIF image server with Dragonfly response cache.
 - Optional Dockhand and Dashy helper tools.
 
 ## Repository Layout
@@ -90,6 +90,7 @@ The clean workflow includes:
 - Solr schema fixes.
 - Keycloak realm import.
 - GigaTIFF-branded web-client files.
+- Integrated GigaTIFF image server and Dragonfly cache.
 - Admin-client build output.
 - Bootstrap checks and local test SQL helpers.
 
@@ -160,10 +161,14 @@ By default, it also publishes those images into the local Docker daemon so
 Docker Compose can run them. Set `PUSH_TO_DOCKER=0` if you only want Buildah
 storage images.
 
-Start the clean stack:
+Start the clean stack, including the GigaTIFF image server:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.clean.yml \
+  -f docker-compose.gigatiff.yml \
+  up -d
 ```
 
 Run the bootstrap checks and disposable test permission helpers:
@@ -193,8 +198,8 @@ username: krameriusAdmin
 password: krameriusAdmin
 ```
 
-When you want to include GigaTIFF and the optional helper tools in the same
-clean deployment, compose the files explicitly:
+When you want to include the optional helper tools in the same clean deployment,
+compose the tools file as well:
 
 ```bash
 docker compose \
@@ -250,6 +255,13 @@ The helper deliberately keeps two GigaTIFF addresses:
   used by Kramerius and worker containers during import and image proxying.
 - `http://<KRAMERIUS_PUBLIC_HOST>:<GIGATIFF_PORT>/iiif/3` is written into
   `rewrite.config` for browser-facing legacy IIP rewrites.
+
+For the clean stack, keep `docker-compose.gigatiff.yml` running on
+`GIGATIFF_PORT`. Imported Akubra datastreams store
+`GIGATIFF_INTERNAL_BASE_URL`; if that URL points to
+`host.docker.internal:<GIGATIFF_PORT>` but no GigaTIFF server listens there,
+ordinary search endpoints can still return 200 while thumbnails, `IMG_FULL` and
+`/search/iiif/.../info.json` return HTTP 500.
 
 On Docker Desktop, the default internal URL is
 `http://host.docker.internal:18082/iiif/3`. If you run the integrated GigaTIFF
@@ -387,8 +399,8 @@ The integrated GigaTIFF compose uses:
 Check readiness:
 
 ```bash
-curl http://127.0.0.1:18082/readyz
-curl http://127.0.0.1:18082/metrics
+curl "http://127.0.0.1:${GIGATIFF_PORT:-18082}/readyz"
+curl "http://127.0.0.1:${GIGATIFF_PORT:-18082}/metrics"
 ```
 
 ## Optional Tools
@@ -906,7 +918,11 @@ git pull --ff-only
 cd /home/bezverec/services/kramerius-test-clean-new
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
 ./scripts/build-clean-images.sh
-docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.clean.yml \
+  -f docker-compose.gigatiff.yml \
+  up -d
 docker compose \
   -f docker-compose.yml \
   -f docker-compose.clean.yml \

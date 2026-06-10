@@ -20,6 +20,8 @@ services:
       - ./logs/kramerius:/usr/local/tomcat/logs
       - ./temp/:/usr/local/tomcat/temp/
       - /etc/localtime:/etc/localtime:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: "always"
     depends_on:
       memcached:
@@ -176,6 +178,8 @@ services:
       - WORKER_BASE_URL=http://curatorWorker:8080/worker/api/
       - WORKER_LOOP_SLEEP_SEC_KEY=0.3
       - HAZELCAST_SERVER_ADDRESSES=lock_server:5701
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${CURATOR_WORKER_PORT:-8084}:8080"
     restart: "always"
@@ -197,6 +201,8 @@ services:
     environment:
       - MANAGER_BASE_URL=http://processManager:8080/process-manager/api/
       - WORKER_BASE_URL=http://publicWorker:8080/worker/api/
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${PUBLIC_WORKER_PORT:-8086}:8080"
     restart: "always"
