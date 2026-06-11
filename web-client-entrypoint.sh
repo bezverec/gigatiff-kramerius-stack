@@ -26,5 +26,7 @@ find /usr/share/nginx/html -type f -name '*.js' -exec sed -i \
 
 sed -i 's#<head>#<head><script>try{localStorage.removeItem("CDK_DEV_BASE_URL");localStorage.removeItem("CDK_DEV_KRAMERIUS_ID");for(var i=localStorage.length-1;i>=0;i--){var k=localStorage.key(i);if(k?k.indexOf("cdk-cache:")===0:false)localStorage.removeItem(k);}}catch(e){console.warn("GigaTIFF localStorage cleanup failed",e);}</script>#' /usr/share/nginx/html/index.html
 sed -i 's#<link rel="icon" type="image/x-icon" href="/img/favicon/favicon.png">#<link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="shortcut icon" href="/favicon.svg">#' /usr/share/nginx/html/index.html
+sed -i 's#</head>#<link rel="stylesheet" href="/gigatiff-square.css?v=13"></head>#' /usr/share/nginx/html/index.html
+sed -i 's#</body>#<script src="/gigatiff-login-shortcut.js?v=4"></script></body>#' /usr/share/nginx/html/index.html
 
 exec nginx -g "daemon off;"

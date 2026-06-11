@@ -22,6 +22,7 @@ jobs:
       stack_version: ${{ steps.versions.outputs.stack_version }}
       registry_namespace: ${{ steps.versions.outputs.registry_namespace }}
       web_client_image: ${{ steps.versions.outputs.web_client_image }}
+      auth_shim_image: ${{ steps.versions.outputs.auth_shim_image }}
       admin_client_image: ${{ steps.versions.outputs.admin_client_image }}
       bootstrap_image: ${{ steps.versions.outputs.bootstrap_image }}
       gigatiff_server_image: ${{ steps.versions.outputs.gigatiff_server_image }}
@@ -53,6 +54,7 @@ jobs:
               "stack_version": data["stack"]["version"],
               "registry_namespace": data["ghcr"]["namespace"],
               "web_client_image": data["ghcr"]["web_client_image"],
+              "auth_shim_image": data["ghcr"]["auth_shim_image"],
               "admin_client_image": data["ghcr"]["admin_client_image"],
               "bootstrap_image": data["ghcr"]["bootstrap_image"],
               "gigatiff_server_image": data["ghcr"]["gigatiff_server_image"],
@@ -112,6 +114,25 @@ jobs:
             org.opencontainers.image.licenses=MIT
           cache-from: type=gha,scope=gigatiff-kramerius-web-client
           cache-to: type=gha,mode=max,scope=gigatiff-kramerius-web-client
+          sbom: true
+          provenance: true
+
+      - name: Build and publish auth shim
+        uses: docker/build-push-action@v6
+        with:
+          context: stack
+          file: stack/Dockerfile.auth-shim
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          tags: ${{ needs.versions.outputs.registry_namespace }}/${{ needs.versions.outputs.auth_shim_image }}:${{ needs.versions.outputs.stack_version }}
+          labels: |
+            org.opencontainers.image.title=GigaTIFF Kramerius Auth Shim
+            org.opencontainers.image.description=Small OAuth2 bridge for the Kramerius web client in the tested stack bundle
+            org.opencontainers.image.source=${{ needs.versions.outputs.source_repository }}
+            org.opencontainers.image.version=${{ needs.versions.outputs.stack_version }}
+            org.opencontainers.image.licenses=MIT
+          cache-from: type=gha,scope=gigatiff-kramerius-auth-shim
+          cache-to: type=gha,mode=max,scope=gigatiff-kramerius-auth-shim
           sbom: true
           provenance: true
 

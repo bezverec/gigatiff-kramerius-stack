@@ -14,6 +14,9 @@ services:
   web-client:
     image: localhost/gigatiff-kramerius-web-client:clean
 
+  auth-shim:
+    image: localhost/gigatiff-kramerius-auth-shim:clean
+
   admin-client:
     image: localhost/gigatiff-kramerius-admin-client:clean
 

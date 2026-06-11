@@ -1,16 +1,21 @@
 services:
   web-client:
     build: null
-    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-web-client:${STACK_VERSION:-stack-0.1.3}
+    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-web-client:${STACK_VERSION:-stack-0.1.4}
+    pull_policy: always
+
+  auth-shim:
+    build: null
+    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-auth-shim:${STACK_VERSION:-stack-0.1.4}
     pull_policy: always
 
   admin-client:
     build: null
-    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-admin-client:${STACK_VERSION:-stack-0.1.3}
+    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-admin-client:${STACK_VERSION:-stack-0.1.4}
     pull_policy: always
 
   clean-bootstrap:
-    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-bootstrap:${STACK_VERSION:-stack-0.1.3}
+    image: ${GHCR_NAMESPACE:-ghcr.io/bezverec}/gigatiff-kramerius-bootstrap:${STACK_VERSION:-stack-0.1.4}
     pull_policy: always
 
   gigatiff-server:

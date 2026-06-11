@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.3
+GigaTIFF Kramerius Stack: stack-0.1.4
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,9 +25,10 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.1
-  Kramerius web client v3:  3.0.14-beta
+  Kramerius web client v3:  3.0.15-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
   GigaTIFF server:          0.3.0
+  Web-client auth shim:     0.1
 
 Services:
   Curator worker:           7.2.1
@@ -48,6 +49,7 @@ The machine-readable source of truth is `versions.toml`.
 - PostgreSQL databases for Kramerius, Keycloak and the process manager.
 - Solr 10 with user-managed cores.
 - Keycloak for OAuth2 authentication.
+- A small web-client auth shim for Keycloak login/token/logout routes.
 - Kramerius web client with GigaTIFF branding.
 - Kramerius admin client.
 - GigaTIFF IIIF image server with Dragonfly response cache.
@@ -62,12 +64,15 @@ The machine-readable source of truth is `versions.toml`.
 - `docker-compose.ghcr.yml` - clean-stack override for prebuilt GHCR images.
 - `versions.toml` - stack version, component pins and GHCR image names.
 - `Containerfile.clean-bootstrap` - small Debian Trixie bootstrap image for post-start checks and SQL helpers.
+- `Dockerfile.auth-shim` - small Python auth bridge used by the web client.
 - `mnt/import/.kramerius4` - Kramerius runtime configuration mounted into API and workers.
 - `mnt/containers/solr/data` - Solr core configuration only, not generated indexes.
 - `public/local-config` - web-client runtime configuration.
 - `public/favicon.svg` - GigaTIFF favicon mounted into the web client.
 - `ops/admin-client` - Docker build wrapper for the required admin client.
+- `ops/auth-shim` - OAuth2 login/token/logout bridge for web-client v3.
 - `ops/bootstrap` - clean-stack bootstrap entrypoint.
+- `ops/web-client` - GigaTIFF web-client CSS and login fallback assets.
 - `ops/keycloak/kramerius-realm.json` - disposable test realm import for Keycloak.
 - `ops/dockhand/register-stack.sh` - Dockhand stack registration helper.
 - `ops/dashy/conf.yml` - Dashy dashboard configuration.
@@ -131,6 +136,7 @@ The clean workflow includes:
 - Solr schema fixes.
 - Keycloak realm import.
 - GigaTIFF-branded web-client files.
+- Web-client login bridge for Keycloak.
 - Integrated GigaTIFF image server and Dragonfly cache.
 - Admin-client build output.
 - Bootstrap checks and local test SQL helpers.
@@ -194,6 +200,7 @@ The script builds:
 
 ```text
 localhost/gigatiff-kramerius-web-client:clean
+localhost/gigatiff-kramerius-auth-shim:clean
 localhost/gigatiff-kramerius-admin-client:clean
 localhost/gigatiff-kramerius-bootstrap:clean
 ```
@@ -207,17 +214,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.3`:
+Published image names for `stack-0.1.4`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.3
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.3
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.3
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.4
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.4
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.4
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.4
 ghcr.io/bezverec/gigatiff-server:0.3.0
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.3`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.4`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
@@ -384,6 +392,21 @@ The imported realm contains:
 - public client `krameriusClient`,
 - roles `common_users`, `public_users`, `kramerius_admin` and `k4_admins`,
 - disposable user `krameriusAdmin` with password `krameriusAdmin`.
+
+The test realm deliberately uses longer local-development session limits than
+the Keycloak defaults:
+
+```text
+Access token lifespan:       3600 seconds
+SSO session idle timeout:    28800 seconds
+SSO session max lifespan:    86400 seconds
+Client session idle timeout: 28800 seconds
+Client session max lifespan: 86400 seconds
+Login code lifespan:         1800 seconds
+```
+
+This avoids repeated automatic logout during longer Admin UI import and metadata
+editing sessions.
 
 Kramerius reads its Keycloak client settings from:
 
@@ -886,11 +909,58 @@ web-client-entrypoint.sh
 web-client-nginx.conf
 public/favicon.svg
 public/local-config
+ops/web-client/gigatiff-square.css
+ops/web-client/gigatiff-login-shortcut.js
 ```
 
 The entrypoint injects local runtime URLs and replaces the upstream favicon with
 the GigaTIFF SVG. The nginx config proxies `/search/` to Kramerius and serves
 legacy favicon paths from the same SVG to avoid stale browser icon references.
+
+The entrypoint also injects a small GigaTIFF UI override. It keeps the current
+web client functional, but makes the local test build visually sharper by
+removing most rounded corners and by adding a visible login fallback button when
+the upstream header does not render one. The fallback follows the upstream CDK
+flow: from regular pages it opens `/pages/terms?returnUrl=...`, and from the
+terms page it starts OAuth login through `/auth/login`.
+
+### Web client auth bridge
+
+The Kramerius web client v3 beta expects these same-origin routes:
+
+```text
+/auth/login
+/auth/token
+/auth/logout
+```
+
+Kramerius 7.2.1 exposes a different authentication facade, so the stack runs a
+small `auth-shim` service built from `Dockerfile.auth-shim`. The web-client
+nginx configuration proxies both `/auth/*` and
+`/search/api/client/v7.0/auth/*` to this shim.
+
+The shim:
+
+- redirects `/auth/login` to the configured Keycloak realm,
+- exchanges `code` for tokens through the internal Keycloak URL,
+- refreshes tokens through the same Keycloak token endpoint,
+- redirects `/auth/logout` to Keycloak logout,
+- exposes `/auth/healthz` for quick checks.
+
+The public redirect target is controlled by:
+
+```env
+KEYCLOAK_PUBLIC_HOST=10.0.120.30
+KEYCLOAK_PORT=8990
+WEB_CLIENT_PORT=1234
+```
+
+For a LAN deployment, the expected quick check is:
+
+```bash
+curl http://127.0.0.1:1234/auth/healthz
+curl -D - -o /dev/null "http://127.0.0.1:1234/auth/login?redirect_uri=http%3A%2F%2F10.0.120.30%3A1234%2Fauth%2Fcallback"
+```
 
 ## Admin Client Notes
 
@@ -931,6 +1001,15 @@ docker compose ps keycloak_eduid
 curl http://127.0.0.1:8990
 ```
 
+Check web-client login bridge:
+
+```bash
+docker compose ps auth-shim web-client
+curl http://127.0.0.1:1234/auth/healthz
+curl -D - -o /dev/null "http://127.0.0.1:1234/auth/login?redirect_uri=http%3A%2F%2F127.0.0.1%3A1234%2Fauth%2Fcallback"
+curl -fsS http://127.0.0.1:1234/ | grep -E 'gigatiff-square|gigatiff-login-shortcut'
+```
+
 Check GigaTIFF:
 
 ```bash
@@ -938,12 +1017,14 @@ curl http://127.0.0.1:18082/readyz
 curl http://127.0.0.1:18082/metrics
 ```
 
-If login redirects still use `keycloak.localhost` from a LAN browser, rerun the
-endpoint helper with the LAN host and restart Keycloak plus Kramerius:
+If login redirects still use `keycloak.localhost` from a LAN browser, or the web
+client login button sends users to an unreachable host, rerun the endpoint
+helper with the LAN host and restart Keycloak, Kramerius, auth-shim and the web
+client:
 
 ```bash
 ./scripts/configure-endpoints.sh 10.0.120.30 0.0.0.0
-docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d keycloak_eduid kramerius web-client admin-client
+docker compose -f docker-compose.yml -f docker-compose.clean.yml up -d keycloak_eduid kramerius auth-shim web-client admin-client
 ```
 
 For the side-by-side ZimaBoard clean stack, keep the alternate ports in `.env`

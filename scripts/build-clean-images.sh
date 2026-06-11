@@ -15,6 +15,7 @@ TAG_SUFFIX="${TAG_SUFFIX:-clean}"
 PUSH_TO_DOCKER="${PUSH_TO_DOCKER:-1}"
 
 WEB_IMAGE="localhost/gigatiff-kramerius-web-client:${TAG_SUFFIX}"
+AUTH_SHIM_IMAGE="localhost/gigatiff-kramerius-auth-shim:${TAG_SUFFIX}"
 ADMIN_IMAGE="localhost/gigatiff-kramerius-admin-client:${TAG_SUFFIX}"
 BOOTSTRAP_IMAGE="localhost/gigatiff-kramerius-bootstrap:${TAG_SUFFIX}"
 
@@ -33,6 +34,12 @@ echo "Building $WEB_IMAGE"
 buildah bud \
   -t "$WEB_IMAGE" \
   -f "$ROOT_DIR/Dockerfile.web-client-gigatiff" \
+  "$ROOT_DIR"
+
+echo "Building $AUTH_SHIM_IMAGE"
+buildah bud \
+  -t "$AUTH_SHIM_IMAGE" \
+  -f "$ROOT_DIR/Dockerfile.auth-shim" \
   "$ROOT_DIR"
 
 echo "Building $ADMIN_IMAGE"
@@ -54,11 +61,13 @@ buildah bud \
 if [ "$PUSH_TO_DOCKER" = "1" ]; then
   echo "Publishing images to the local Docker daemon"
   buildah push "$WEB_IMAGE" "docker-daemon:$WEB_IMAGE"
+  buildah push "$AUTH_SHIM_IMAGE" "docker-daemon:$AUTH_SHIM_IMAGE"
   buildah push "$ADMIN_IMAGE" "docker-daemon:$ADMIN_IMAGE"
   buildah push "$BOOTSTRAP_IMAGE" "docker-daemon:$BOOTSTRAP_IMAGE"
 fi
 
 echo "Clean images are ready:"
 echo "  $WEB_IMAGE"
+echo "  $AUTH_SHIM_IMAGE"
 echo "  $ADMIN_IMAGE"
 echo "  $BOOTSTRAP_IMAGE"

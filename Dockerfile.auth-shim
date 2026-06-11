@@ -1,0 +1,15 @@
+FROM python:3.12-alpine
+
+LABEL org.opencontainers.image.title="GigaTIFF Kramerius Auth Shim" \
+      org.opencontainers.image.description="Small OAuth2 bridge for the Kramerius web client in the tested stack bundle" \
+      org.opencontainers.image.source="https://github.com/bezverec/gigatiff-kramerius-stack" \
+      org.opencontainers.image.licenses="MIT"
+
+WORKDIR /app
+COPY ops/auth-shim/auth_shim.py /app/auth_shim.py
+
+RUN addgroup -S authshim && adduser -S -G authshim authshim
+USER authshim
+
+EXPOSE 8080
+CMD ["python", "/app/auth_shim.py"]

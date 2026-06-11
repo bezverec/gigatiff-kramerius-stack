@@ -66,10 +66,23 @@
                                     "monograph",
                                     "map",
                                     "graphic",
+                                    "collection",
                                     "page"
                                 ]
                },
     "pages":  [
-
+                  {
+                      "id":  "terms",
+                      "content":  {
+                                      "cs":  [
+                                                 "local-config/gigatiff/html/terms/terms.cs.html",
+                                                 "local-config/gigatiff/html/terms/terms2.cs.html"
+                                             ],
+                                      "en":  [
+                                                 "local-config/gigatiff/html/terms/terms.en.html",
+                                                 "local-config/gigatiff/html/terms/terms2.en.html"
+                                             ]
+                                  }
+                  }
               ]
 }

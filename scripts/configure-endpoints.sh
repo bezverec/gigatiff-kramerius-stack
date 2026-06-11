@@ -54,12 +54,14 @@ KRAMERIUS_DB_PORT=$kramerius_db_port
 PROCESS_DB_PORT=$process_db_port
 GIGATIFF_PORT=$gigatiff_port
 GHCR_NAMESPACE=ghcr.io/bezverec
-STACK_VERSION=stack-0.1.3
+STACK_VERSION=stack-0.1.4
 GIGATIFF_SERVER_VERSION=0.3.0
 GIGATIFF_INTERNAL_BASE_URL=$gigatiff_internal_base
 GIGATIFF_SOURCE_DIR=../gigatiff
 GIGATIFF_CACHE_NAMESPACE=gigatiff-server-response-v12-jp2-auto-fix
 ADMIN_CLIENT_DOCKERFILE=../${stack_dir_name}/ops/admin-client/Dockerfile.gigatiff
+KEYCLOAK_REALM=kramerius
+KEYCLOAK_CLIENT_ID=krameriusClient
 DOCKHAND_PORT=$dockhand_port
 DASHY_PORT=$dashy_port
 EOF

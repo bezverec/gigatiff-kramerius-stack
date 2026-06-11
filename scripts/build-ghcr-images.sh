@@ -30,6 +30,7 @@ PUSH_TO_DOCKER="${PUSH_TO_DOCKER:-1}"
 PUSH_TO_GHCR="${PUSH_TO_GHCR:-0}"
 
 WEB_IMAGE="${GHCR_NAMESPACE}/$(read_version ghcr web_client_image):${STACK_VERSION}"
+AUTH_SHIM_IMAGE="${GHCR_NAMESPACE}/$(read_version ghcr auth_shim_image):${STACK_VERSION}"
 ADMIN_IMAGE="${GHCR_NAMESPACE}/$(read_version ghcr admin_client_image):${STACK_VERSION}"
 BOOTSTRAP_IMAGE="${GHCR_NAMESPACE}/$(read_version ghcr bootstrap_image):${STACK_VERSION}"
 GIGATIFF_IMAGE="${GHCR_NAMESPACE}/$(read_version ghcr gigatiff_server_image):${GIGATIFF_SERVER_VERSION}"
@@ -57,6 +58,14 @@ buildah bud \
   --label "org.opencontainers.image.source=$(read_version stack repository)" \
   --label "org.opencontainers.image.version=$STACK_VERSION" \
   -f "$ROOT_DIR/Dockerfile.web-client-gigatiff" \
+  "$ROOT_DIR"
+
+echo "Building $AUTH_SHIM_IMAGE"
+buildah bud \
+  -t "$AUTH_SHIM_IMAGE" \
+  --label "org.opencontainers.image.source=$(read_version stack repository)" \
+  --label "org.opencontainers.image.version=$STACK_VERSION" \
+  -f "$ROOT_DIR/Dockerfile.auth-shim" \
   "$ROOT_DIR"
 
 echo "Building $ADMIN_IMAGE"
@@ -89,6 +98,7 @@ buildah bud \
 if [ "$PUSH_TO_DOCKER" = "1" ]; then
   echo "Publishing images to the local Docker daemon"
   buildah push "$WEB_IMAGE" "docker-daemon:$WEB_IMAGE"
+  buildah push "$AUTH_SHIM_IMAGE" "docker-daemon:$AUTH_SHIM_IMAGE"
   buildah push "$ADMIN_IMAGE" "docker-daemon:$ADMIN_IMAGE"
   buildah push "$BOOTSTRAP_IMAGE" "docker-daemon:$BOOTSTRAP_IMAGE"
   buildah push "$GIGATIFF_IMAGE" "docker-daemon:$GIGATIFF_IMAGE"
@@ -97,6 +107,7 @@ fi
 if [ "$PUSH_TO_GHCR" = "1" ]; then
   echo "Publishing images to GHCR"
   buildah push "$WEB_IMAGE"
+  buildah push "$AUTH_SHIM_IMAGE"
   buildah push "$ADMIN_IMAGE"
   buildah push "$BOOTSTRAP_IMAGE"
   buildah push "$GIGATIFF_IMAGE"
@@ -104,6 +115,7 @@ fi
 
 echo "GHCR images are ready:"
 echo "  $WEB_IMAGE"
+echo "  $AUTH_SHIM_IMAGE"
 echo "  $ADMIN_IMAGE"
 echo "  $BOOTSTRAP_IMAGE"
 echo "  $GIGATIFF_IMAGE"
