@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.4
+GigaTIFF Kramerius Stack: stack-0.1.5
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -27,7 +27,7 @@ Core:
   Kramerius API:            7.2.1
   Kramerius web client v3:  3.0.15-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
-  GigaTIFF server:          0.3.0
+  GigaTIFF server:          0.3.1
   Web-client auth shim:     0.1
 
 Services:
@@ -42,6 +42,13 @@ Services:
 ```
 
 The machine-readable source of truth is `versions.toml`.
+
+`stack-0.1.5` refreshes the GigaTIFF server image to `0.3.1`. That image builds
+Grok from upstream commit `06c96bfbc38c74d386ce27018002d3febfff8f0c`, which
+fixes the lossy RPCL JP2 region/reduce artefact reproduced during local testing.
+The recommended JP2 runtime mode remains the hybrid `auto` mode: OpenJPEG is the
+primary decoder and Grok is available as fallback or an explicitly selected
+backend.
 
 ## What This Stack Starts
 
@@ -214,18 +221,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.4`:
+Published image names for `stack-0.1.5`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.4
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.4
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.4
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.4
-ghcr.io/bezverec/gigatiff-server:0.3.0
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.5
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.5
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.5
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.5
+ghcr.io/bezverec/gigatiff-server:0.3.1
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.4`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.5`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
