@@ -1,6 +1,6 @@
 services:
   kramerius:
-    image: ceskaexpedice/kramerius:7.2.1
+    image: ceskaexpedice/kramerius:7.2.1.1
     user: "0"
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${KRAMERIUS_API_PORT:-8088}:8080"
@@ -177,7 +177,7 @@ services:
       start_period: 30s
 
   curatorWorker:
-    image: "ceskaexpedice/curator-worker:7.2.1"
+    image: "ceskaexpedice/curator-worker:7.2.1.1"
     depends_on:
       processPostgres:
         condition: service_healthy
@@ -202,7 +202,7 @@ services:
     restart: "always"
 
   publicWorker:
-    image: "ceskaexpedice/public-worker:7.2.1"
+    image: "ceskaexpedice/public-worker:7.2.1.1"
     depends_on:
       processPostgres:
         condition: service_healthy

@@ -113,6 +113,7 @@ wait_for_http "Kramerius API" "$KRAMERIUS_HEALTH_URL" 150 2
 
 require_field "search" "authors.aut.facet"
 require_field "search" "coords.is_point"
+require_field "search" "coords.bbox"
 warn_field "logs" "created"
 
 if [ -f /ops/sql/grant-public-read.sql ]; then

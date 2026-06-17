@@ -1,7 +1,7 @@
 # GigaTIFF Kramerius Stack
 
 This repository contains a reproducible local or LAN test deployment for the
-GigaTIFF Kramerius Stack: Kramerius 7.2.1 connected to the GigaTIFF IIIF image
+GigaTIFF Kramerius Stack: Kramerius 7.2.1.1 connected to the GigaTIFF IIIF image
 server.
 
 It tracks configuration and installation scaffolding only. Runtime databases,
@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.5
+GigaTIFF Kramerius Stack: stack-0.1.6
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -24,15 +24,15 @@ Compatibility matrix:
 
 ```text
 Core:
-  Kramerius API:            7.2.1
+  Kramerius API:            7.2.1.1
   Kramerius web client v3:  3.0.15-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
   GigaTIFF server:          0.3.1
   Web-client auth shim:     0.1
 
 Services:
-  Curator worker:           7.2.1
-  Public worker:            7.2.1
+  Curator worker:           7.2.1.1
+  Public worker:            7.2.1.1
   Process manager:          1.5
   Solr:                     10.0.0
   PostgreSQL:               18.4
@@ -50,9 +50,16 @@ The recommended JP2 runtime mode remains the hybrid `auto` mode: OpenJPEG is the
 primary decoder and Grok is available as fallback or an explicitly selected
 backend.
 
+`stack-0.1.6` upgrades the Kramerius API, curator worker and public worker to
+`7.2.1.1`. Upstream release notes mention a new field in the `search` Solr index
+for map/georeference search; the schema tracked in this repository was compared
+against the `v7.2.1.1` Solr 9 schema and already contains the required fields.
+Existing data with maps or georeferences should still be reindexed after the
+upgrade so the new index content is populated.
+
 ## What This Stack Starts
 
-- Kramerius 7.2.1 API and workers.
+- Kramerius 7.2.1.1 API and workers.
 - PostgreSQL databases for Kramerius, Keycloak and the process manager.
 - Solr 10 with user-managed cores.
 - Keycloak for OAuth2 authentication.
@@ -221,18 +228,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.5`:
+Published image names for `stack-0.1.6`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.5
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.5
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.5
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.5
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.6
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.6
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.6
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.6
 ghcr.io/bezverec/gigatiff-server:0.3.1
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.5`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.6`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
@@ -767,6 +774,7 @@ upstream Solr 9.x profile, for example:
 - `authors.aut.facet`
 - `authors.aut.identifiers`
 - `coords.is_point`
+- `coords.bbox`
 - `date_instant.year`
 - `subject_names_personal.search`
 - `subject_names_corporate.facet`
@@ -786,7 +794,8 @@ children/facet queries with HTTP 500 responses from Kramerius. A typical failing
 query asks Solr for fields such as `date.str`, `own_parent.pid`,
 `issue.type.code`, `licenses` or sorts by `date.min`. Import or reindex jobs can
 also fail with Solr `unknown field` errors for newer indexer fields such as
-`authors.aut.facet` or `authors.aut.identifiers`.
+`authors.aut.facet`, `authors.aut.identifiers` or spatial fields such as
+`coords.bbox`.
 
 When changing Solr schema files:
 
@@ -799,7 +808,7 @@ When changing Solr schema files:
 For a quick schema sanity check:
 
 ```bash
-grep -n 'own_parent.pid\|date.str\|licenses.facet\|authors.aut.identifiers\|subject_names_personal.search' \
+grep -n 'own_parent.pid\|date.str\|licenses.facet\|authors.aut.identifiers\|coords.bbox\|subject_names_personal.search' \
   mnt/containers/solr/data/search/conf/managed-schema
 ```
 
@@ -941,7 +950,7 @@ The Kramerius web client v3 beta expects these same-origin routes:
 /auth/logout
 ```
 
-Kramerius 7.2.1 exposes a different authentication facade, so the stack runs a
+Kramerius 7.2.x exposes a different authentication facade, so the stack runs a
 small `auth-shim` service built from `Dockerfile.auth-shim`. The web-client
 nginx configuration proxies both `/auth/*` and
 `/search/api/client/v7.0/auth/*` to this shim.
