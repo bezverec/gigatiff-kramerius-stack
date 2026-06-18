@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.6
+GigaTIFF Kramerius Stack: stack-0.1.7
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,7 +25,7 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.1.1
-  Kramerius web client v3:  3.0.15-beta
+  Kramerius web client v3:  3.0.16-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
   GigaTIFF server:          0.3.1
   Web-client auth shim:     0.1
@@ -56,6 +56,11 @@ for map/georeference search; the schema tracked in this repository was compared
 against the `v7.2.1.1` Solr 9 schema and already contains the required fields.
 Existing data with maps or georeferences should still be reindexed after the
 upgrade so the new index content is populated.
+
+`stack-0.1.7` upgrades the Kramerius web client v3 to `3.0.16-beta`. The
+upstream release refreshes audio-recording pages, favorites-list behavior,
+accessibility modes, collection display, metadata grouping, and several document
+detail edge cases.
 
 ## What This Stack Starts
 
@@ -228,18 +233,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.6`:
+Published image names for `stack-0.1.7`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.6
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.6
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.6
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.6
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.7
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.7
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.7
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.7
 ghcr.io/bezverec/gigatiff-server:0.3.1
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.6`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.7`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 

@@ -1,7 +1,7 @@
 [stack]
 name = "GigaTIFF Kramerius Stack"
 repository = "https://github.com/bezverec/gigatiff-kramerius-stack"
-version = "stack-0.1.6"
+version = "stack-0.1.7"
 runtime_directory = "gigatiff-kramerius"
 
 [ghcr]
@@ -15,8 +15,8 @@ gigatiff_server_image = "gigatiff-server"
 [core]
 kramerius_api_version = "7.2.1.1"
 kramerius_api_image = "ceskaexpedice/kramerius:7.2.1.1"
-kramerius_web_client_version = "3.0.15-beta"
-kramerius_web_client_base_image = "trinera/cdk-client:3.0.15-beta"
+kramerius_web_client_version = "3.0.16-beta"
+kramerius_web_client_base_image = "trinera/cdk-client:3.0.16-beta"
 kramerius_admin_client_repository = "https://github.com/ceskaexpedice/kramerius-admin-client"
 kramerius_admin_client_ref = "c36565ff75591bc593bc042b31b83b7b6dd17869"
 gigatiff_server_version = "0.3.1"
