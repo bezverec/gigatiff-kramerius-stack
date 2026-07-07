@@ -5,10 +5,10 @@ echo "Generating runtime environment file..."
 
 cat <<EOF > /usr/share/nginx/html/assets/env.json
 {
+  "useStaticRuntimeConfig": ${APP_USE_STATIC_RUNTIME_CONFIG:-true},
   "devMode": ${APP_DEV_MODE:-false},
   "environmentName": "${APP_ENV_NAME:-docker runtime}",
-  "environmentCode": "${APP_ENV_CODE:-docker}",
-  "krameriusId": "${APP_KRAMERIUS_ID:-gigatiff}"
+  "environmentCode": "${APP_ENV_CODE:-docker}"
 }
 EOF
 

@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.7
+GigaTIFF Kramerius Stack: stack-0.1.8
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,7 +25,7 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.1.1
-  Kramerius web client v3:  3.0.16-beta
+  Kramerius web client v3:  3.0.18-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
   GigaTIFF server:          0.3.1
   Web-client auth shim:     0.1
@@ -61,6 +61,14 @@ upgrade so the new index content is populated.
 upstream release refreshes audio-recording pages, favorites-list behavior,
 accessibility modes, collection display, metadata grouping, and several document
 detail edge cases.
+
+`stack-0.1.8` upgrades the Kramerius web client v3 to `3.0.18-beta`. This
+upstream release changes the runtime configuration layout: client configuration
+files are now served directly from `/local-config/` instead of
+`/local-config/<krameriusId>/`. The stack follows that layout, so the GigaTIFF
+client configuration is tracked as `public/local-config/config-main.json`,
+`public/local-config/config-licenses.json` and
+`public/local-config/config-homepage.json`.
 
 ## What This Stack Starts
 
@@ -233,18 +241,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.7`:
+Published image names for `stack-0.1.8`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.7
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.7
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.7
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.7
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.8
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.8
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.8
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.8
 ghcr.io/bezverec/gigatiff-server:0.3.1
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.7`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.8`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
@@ -362,7 +370,7 @@ The helper updates:
 - `mnt/import/.kramerius4/configuration.properties`
 - `mnt/import/.kramerius4/keycloak.json`
 - `mnt/import/.kramerius4/migration.properties`
-- `public/local-config/gigatiff/config-main.json`
+- `public/local-config/config-main.json`
 - `public/local-config/libraries.json`
 - `rewrite.config`
 
@@ -1069,7 +1077,7 @@ the local nginx container:
 
 ```bash
 curl http://127.0.0.1:1234/local-config/libraries.json
-curl http://127.0.0.1:1234/local-config/gigatiff/config-main.json
+curl http://127.0.0.1:1234/local-config/config-main.json
 ```
 
 The browser console should report that configuration was loaded for library

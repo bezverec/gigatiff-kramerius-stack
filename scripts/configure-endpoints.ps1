@@ -82,7 +82,7 @@ if (-not $KeycloakPublicHost) {
     "PROCESS_DB_PORT=$ProcessDbPort"
     "GIGATIFF_PORT=$GigaTiffPort"
     "GHCR_NAMESPACE=ghcr.io/bezverec"
-    "STACK_VERSION=stack-0.1.7"
+    "STACK_VERSION=stack-0.1.8"
     "GIGATIFF_SERVER_VERSION=0.3.1"
     "GIGATIFF_INTERNAL_BASE_URL=$GigaTiffInternalBaseUrl"
     "GIGATIFF_SOURCE_DIR=../gigatiff"
@@ -117,7 +117,7 @@ $keycloakJson = Get-Content -LiteralPath $keycloak -Raw | ConvertFrom-Json
 $keycloakJson.'auth-server-url' = "http://${KeycloakPublicHost}:$KeycloakPort/"
 $keycloakJson | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $keycloak -Encoding UTF8
 
-$configMain = Join-Path $Root "public/local-config/gigatiff/config-main.json"
+$configMain = Join-Path $Root "public/local-config/config-main.json"
 $config = Get-Content -LiteralPath $configMain -Raw | ConvertFrom-Json
 $config.app.name.cs = "GigaTIFF"
 $config.app.name.en = "GigaTIFF"
