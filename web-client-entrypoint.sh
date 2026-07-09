@@ -8,7 +8,9 @@ cat <<EOF > /usr/share/nginx/html/assets/env.json
   "useStaticRuntimeConfig": ${APP_USE_STATIC_RUNTIME_CONFIG:-true},
   "devMode": ${APP_DEV_MODE:-false},
   "environmentName": "${APP_ENV_NAME:-docker runtime}",
-  "environmentCode": "${APP_ENV_CODE:-docker}"
+  "environmentCode": "${APP_ENV_CODE:-docker}",
+  "apiConfigBaseUrl": "${APP_API_CONFIG_BASE_URL:-}",
+  "forceApiConfig": ${APP_FORCE_API_CONFIG:-false}
 }
 EOF
 

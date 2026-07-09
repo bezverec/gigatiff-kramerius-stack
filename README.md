@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.8
+GigaTIFF Kramerius Stack: stack-0.1.9
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,7 +25,7 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.1.1
-  Kramerius web client v3:  3.0.18-beta
+  Kramerius web client v3:  3.0.19-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
   GigaTIFF server:          0.3.1
   Web-client auth shim:     0.1
@@ -69,6 +69,16 @@ files are now served directly from `/local-config/` instead of
 client configuration is tracked as `public/local-config/config-main.json`,
 `public/local-config/config-licenses.json` and
 `public/local-config/config-homepage.json`.
+
+`stack-0.1.9` upgrades the Kramerius web client v3 to `3.0.19-beta`. The
+upstream release adds optional loading of UI configuration from the Kramerius API
+`/ui-config/` endpoints. This stack keeps local `public/local-config/*` files as
+the default source of truth and writes `apiConfigBaseUrl: ""` plus
+`forceApiConfig: false` into `assets/env.json`; API-loaded configuration can be
+enabled later with `APP_API_CONFIG_BASE_URL` and `APP_FORCE_API_CONFIG=true`.
+The local `config-main.json` was also aligned with the new upstream config shape
+by adding explicit integrations/export settings, `features.showExportHistory`,
+the broader document-type list, and `search.facetThreads`.
 
 ## What This Stack Starts
 
@@ -241,18 +251,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.8`:
+Published image names for `stack-0.1.9`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.8
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.8
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.8
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.8
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.9
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.9
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.9
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.9
 ghcr.io/bezverec/gigatiff-server:0.3.1
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.8`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.9`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 

@@ -29,11 +29,32 @@
                      "georef":  false,
                      "ai":  false,
                      "folders":  false,
-                     "librarySwitch":  false
+                     "librarySwitch":  false,
+                     "showExportHistory":  false
                  },
+    "integrations":  {
+                         "clientId":  "",
+                         "analytics":  {
+                                           "provider":  "ga4",
+                                           "enabled":  false,
+                                           "measurementId":  ""
+                                       },
+                         "googleMaps":  {
+                                            "enabled":  false,
+                                            "apiKey":  ""
+                                        }
+                     },
     "ui":  {
                "cookiebar":  false
            },
+    "export":  {
+                   "print":  true,
+                   "jpeg":  true,
+                   "pdf":  true,
+                   "epub":  true,
+                   "txt":  true,
+                   "enrichWithAI":  false
+               },
     "viewer":  {
                    "defaultMode":  "single",
                    "availableModes":  [
@@ -60,15 +81,24 @@
                },
     "search":  {
                    "doctypes":  [
+                                    "monograph",
+                                    "monographunit",
                                     "periodical",
                                     "periodicalvolume",
                                     "periodicalitem",
-                                    "monograph",
+                                    "article",
                                     "map",
                                     "graphic",
+                                    "manuscript",
+                                    "archive",
+                                    "sheetmusic",
+                                    "soundrecording",
+                                    "supplement",
+                                    "convolute",
                                     "collection",
                                     "page"
-                                ]
+                                ],
+                   "facetThreads":  -1
                },
     "pages":  [
                   {
