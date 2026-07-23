@@ -1,4 +1,4 @@
-FROM trinera/cdk-client:3.0.19-beta
+FROM trinera/cdk-client:3.0.20-beta
 
 LABEL org.opencontainers.image.title="GigaTIFF Kramerius Web Client" \
       org.opencontainers.image.description="GigaTIFF-branded Kramerius web client for the tested stack bundle" \

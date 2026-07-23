@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.9
+GigaTIFF Kramerius Stack: stack-0.1.10
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,7 +25,7 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.1.1
-  Kramerius web client v3:  3.0.19-beta
+  Kramerius web client v3:  3.0.20-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
   GigaTIFF server:          0.3.1
   Web-client auth shim:     0.1
@@ -79,6 +79,14 @@ enabled later with `APP_API_CONFIG_BASE_URL` and `APP_FORCE_API_CONFIG=true`.
 The local `config-main.json` was also aligned with the new upstream config shape
 by adding explicit integrations/export settings, `features.showExportHistory`,
 the broader document-type list, and `search.facetThreads`.
+
+`stack-0.1.10` upgrades the Kramerius web client v3 to `3.0.20-beta`. The
+upstream release focuses on fixes for favorites-list searches, collection data
+loading, multivolume-publication search pagination and counts, periodical
+filters, year-range validation, mobile reader controls, FAQ display and updated
+localization. The runtime configuration shape was checked against the
+`trinera/cdk-client:3.0.20-beta` image and remains compatible with the
+`stack-0.1.9` local-config layout.
 
 ## What This Stack Starts
 
@@ -251,18 +259,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.9`:
+Published image names for `stack-0.1.10`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.9
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.9
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.9
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.9
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.10
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.10
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.10
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.10
 ghcr.io/bezverec/gigatiff-server:0.3.1
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.9`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.10`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
