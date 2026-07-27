@@ -15,11 +15,22 @@
   <fieldType name="binary" class="solr.BinaryField"/>
   <fieldType name="boolean" class="solr.BoolField" omitNorms="true" sortMissingLast="true"/>
   <fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
+  <fieldType name="children_path_hierarchy" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+  </fieldType>
   <fieldType name="date" class="solr.TrieDateField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
   <fieldType name="double" class="solr.TrieDoubleField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
   <fieldType name="float" class="solr.TrieFloatField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
   <fieldType name="ignored" class="solr.StrField" multiValued="true" indexed="false" stored="false"/>
   <fieldType name="int" class="solr.TrieIntField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
+  <fieldType name="location" class="solr.LatLonPointSpatialField" docValues="true"/>
   <fieldType name="location_rpt" class="solr.SpatialRecursivePrefixTreeFieldType" geo="true" maxDistErr="0.000009" distErrPct="0.025"/>
   <fieldType name="long" class="solr.TrieLongField" omitNorms="true" positionIncrementGap="0" sortMissingLast="true" precisionStep="0"/>
   <fieldType name="lowercase" class="solr.TextField" positionIncrementGap="100">
@@ -49,6 +60,16 @@
     </analyzer>
   </fieldType>
   <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
+  <fieldType name="parents_path_hierarchy" class="solr.TextField" positionIncrementGap="100">
+    <analyzer type="index">
+      <tokenizer class="solr.KeywordTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.PathHierarchyTokenizerFactory" delimiter="/"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+  </fieldType>
   <fieldType name="random" class="solr.RandomSortField" indexed="true"/>
   <fieldType name="string" class="solr.StrField" omitNorms="true" sortMissingLast="true"/>
   <fieldType name="string_lower" class="solr.TextField" positionIncrementGap="100" omitNorms="true" sortMissingLast="true">
@@ -116,6 +137,11 @@
     <analyzer>
       <tokenizer class="solr.StandardTokenizerFactory"/>
       <filter class="solr.LowerCaseFilterFactory"/>
+    </analyzer>
+  </fieldType>
+  <fieldType name="text_exact_match" class="solr.TextField" positionIncrementGap="100">
+    <analyzer>
+      <tokenizer class="solr.StandardTokenizerFactory"/>
     </analyzer>
   </fieldType>
   <fieldType name="text_general" class="solr.TextField" positionIncrementGap="100">
@@ -232,12 +258,15 @@
   <field name="authors" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="authors.aut.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
   <field name="authors.aut.identifiers" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="authors.aut.roles" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
   <field name="authors.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
   <field name="authors.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="authors.search.exact" type="text_exact_match" docValues="false" multiValued="true" indexed="true" stored="false"/>
   <field name="collection.desc" type="string" multiValued="true" indexed="true" stored="true"/>
   <field name="collection.is_standalone" type="boolean" indexed="true" stored="true"/>
   <field name="contains_licenses" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
   <field name="coords.bbox" type="bbox" multiValued="false"/>
+  <field name="coords.bbox_overlap" type="bbox" uninvertible="true" indexed="true" stored="false"/>
   <field name="coords.bbox.center" type="location_rpt" multiValued="false" indexed="true" stored="true"/>
   <field name="coords.bbox.corner_ne" type="location_rpt" multiValued="false" indexed="true" stored="true"/>
   <field name="coords.bbox.corner_sw" type="location_rpt" multiValued="false" indexed="true" stored="true"/>
@@ -247,6 +276,7 @@
   <field name="coords.bbox__minY" type="_bbox_coord"/>
   <field name="coords.bbox__xdl" type="boolean"/>
   <field name="coords.is_point" type="boolean" indexed="true" stored="true"/>
+  <field name="coords.point" type="location" docValues="true" indexed="true" stored="true"/>
   <field name="count_internal_part" type="int" indexed="true" docValues="true" stored="true"/>
   <field name="count_issue" type="int" indexed="true" docValues="true" stored="true"/>
   <field name="count_monograph_unit" type="int" indexed="true" docValues="true" stored="true"/>
@@ -280,6 +310,7 @@
   <field name="has_text_ocr_content" type="boolean" indexed="true" docValues="true" stored="true"/>
   <field name="has_tiles" type="boolean" indexed="true" stored="true"/>
   <field name="id_barcode" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="id_all" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="id_ccnb" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="id_isbn" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="id_ismn" type="string" docValues="false" multiValued="true" indexed="true" stored="true"/>
@@ -306,10 +337,14 @@
   <field name="model" type="string" docValues="true" multiValued="false" indexed="true" stored="true"/>
   <field name="modified" type="date" docValues="true" multiValued="false" indexed="true" stored="true"/>
   <field name="own_model_path" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="own_model_path.children" type="children_path_hierarchy" docValues="false" multiValued="false" indexed="true" stored="false"/>
+  <field name="own_model_path.parents" type="parents_path_hierarchy" docValues="false" multiValued="false" indexed="true" stored="false"/>
   <field name="own_parent.model" type="string" indexed="true" stored="true"/>
   <field name="own_parent.pid" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="own_parent.title" type="string" indexed="true" stored="true"/>
   <field name="own_pid_path" type="string" multiValued="false" indexed="true" stored="true"/>
+  <field name="own_pid_path.children" type="children_path_hierarchy" docValues="false" multiValued="false" indexed="true" stored="false"/>
+  <field name="own_pid_path.parents" type="parents_path_hierarchy" docValues="false" multiValued="false" indexed="true" stored="false"/>
   <field name="page.index" type="int" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="page.number" type="string" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="page.placement" type="string" docValues="false" multiValued="false" indexed="true" stored="true"/>
@@ -318,8 +353,11 @@
   <field name="part.number.sort" type="int" multiValued="false" indexed="true" stored="true"/>
   <field name="part.number.str" type="string" multiValued="false" indexed="true" stored="true"/>
   <field name="physical_locations.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <field name="physical_locations.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="pid" type="string" indexed="true" required="true" stored="true"/>
   <field name="pid_paths" type="string" multiValued="true" indexed="true" stored="true"/>
+  <field name="pid_paths.children" type="children_path_hierarchy" docValues="false" multiValued="true" indexed="true" stored="false"/>
+  <field name="pid_paths.parents" type="parents_path_hierarchy" docValues="false" multiValued="true" indexed="true" stored="false"/>
   <field name="publication_places.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
   <field name="publication_places.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="publishers.facet" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
@@ -338,10 +376,14 @@
   <field name="subject_temporals.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <field name="subtype" type="string" docValues="true" multiValued="false" indexed="true" stored="true"/>
   <field name="text_ocr" type="text_general_not_lemmatized" storeOffsetsWithPositions="true" indexed="true" stored="true"/>
+  <field name="text_ocr.exact" type="text_exact_match" storeOffsetsWithPositions="true" indexed="true" stored="false"/>
   <field name="title.search" type="text_fgs" docValues="false" multiValued="false" indexed="true" stored="true"/>
   <field name="title.sort" type="string" docValues="true" multiValued="false" indexed="true" stored="true"/>
   <field name="titles.search" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
+  <field name="titles.search.exact" type="text_exact_match" docValues="false" multiValued="true" indexed="true" stored="false"/>
   <field name="track.length" type="int" docValues="false" multiValued="false" indexed="true" stored="true"/>
+  <dynamicField name="author.aut.facet.role_*" type="string" docValues="true" multiValued="true" indexed="true" stored="true"/>
+  <dynamicField name="author.aut.search.role_*" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <dynamicField name="collection.desc_*" type="text_general_not_lemmatized" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <dynamicField name="title.search_*" type="text_fgs" docValues="false" multiValued="true" indexed="true" stored="true"/>
   <copyField source="contains_licenses" dest="licenses.facet"/>

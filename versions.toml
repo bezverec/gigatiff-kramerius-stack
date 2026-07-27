@@ -1,7 +1,7 @@
 [stack]
 name = "GigaTIFF Kramerius Stack"
 repository = "https://github.com/bezverec/gigatiff-kramerius-stack"
-version = "stack-0.1.10"
+version = "stack-0.1.11"
 runtime_directory = "gigatiff-kramerius"
 
 [ghcr]
@@ -13,8 +13,8 @@ bootstrap_image = "gigatiff-kramerius-bootstrap"
 gigatiff_server_image = "gigatiff-server"
 
 [core]
-kramerius_api_version = "7.2.1.1"
-kramerius_api_image = "ceskaexpedice/kramerius:7.2.1.1"
+kramerius_api_version = "7.2.1.2"
+kramerius_api_image = "ceskaexpedice/kramerius:7.2.1.2"
 kramerius_web_client_version = "3.0.20-beta"
 kramerius_web_client_base_image = "trinera/cdk-client:3.0.20-beta"
 kramerius_admin_client_repository = "https://github.com/ceskaexpedice/kramerius-admin-client"
@@ -24,8 +24,8 @@ gigatiff_repository = "https://github.com/bezverec/gigatiff"
 gigatiff_ref = "eac488a165078d3217f128cb42aab1a433fc4afc"
 
 [services]
-curator_worker = "ceskaexpedice/curator-worker:7.2.1.1"
-public_worker = "ceskaexpedice/public-worker:7.2.1.1"
+curator_worker = "ceskaexpedice/curator-worker:7.2.1.2"
+public_worker = "ceskaexpedice/public-worker:7.2.1.2"
 process_manager = "ceskaexpedice/process-manager:1.5"
 solr = "solr:10.0.0"
 postgresql = "postgres:18.4"
