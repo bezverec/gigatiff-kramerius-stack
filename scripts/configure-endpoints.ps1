@@ -82,7 +82,7 @@ if (-not $KeycloakPublicHost) {
     "PROCESS_DB_PORT=$ProcessDbPort"
     "GIGATIFF_PORT=$GigaTiffPort"
     "GHCR_NAMESPACE=ghcr.io/bezverec"
-    "STACK_VERSION=stack-0.1.11"
+    "STACK_VERSION=stack-0.1.12"
     "GIGATIFF_SERVER_VERSION=0.3.1"
     "GIGATIFF_INTERNAL_BASE_URL=$GigaTiffInternalBaseUrl"
     "GIGATIFF_SOURCE_DIR=../gigatiff"
@@ -121,6 +121,16 @@ $configMain = Join-Path $Root "public/local-config/config-main.json"
 $config = Get-Content -LiteralPath $configMain -Raw | ConvertFrom-Json
 $config.app.name.cs = "GigaTIFF"
 $config.app.name.en = "GigaTIFF"
+if (-not ($config.app.name.PSObject.Properties.Name -contains "sk")) {
+    $config.app.name | Add-Member -NotePropertyName "sk" -NotePropertyValue "GigaTIFF"
+} else {
+    $config.app.name.sk = "GigaTIFF"
+}
+if (-not ($config.app.name.PSObject.Properties.Name -contains "pl")) {
+    $config.app.name | Add-Member -NotePropertyName "pl" -NotePropertyValue "GigaTIFF"
+} else {
+    $config.app.name.pl = "GigaTIFF"
+}
 $config.app.logo = "/favicon.svg"
 $config.app.adminClientUrl = "http://${PublicHost}:$AdminClientPort"
 $config.api.baseUrl = "http://${PublicHost}:$KrameriusApiPort"

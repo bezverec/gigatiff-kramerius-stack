@@ -54,7 +54,7 @@ KRAMERIUS_DB_PORT=$kramerius_db_port
 PROCESS_DB_PORT=$process_db_port
 GIGATIFF_PORT=$gigatiff_port
 GHCR_NAMESPACE=ghcr.io/bezverec
-STACK_VERSION=stack-0.1.11
+STACK_VERSION=stack-0.1.12
 GIGATIFF_SERVER_VERSION=0.3.1
 GIGATIFF_INTERNAL_BASE_URL=$gigatiff_internal_base
 GIGATIFF_SOURCE_DIR=../gigatiff
@@ -118,7 +118,12 @@ keycloak.write_text(json.dumps(keycloak_json, indent=2) + "\n", encoding="utf-8"
 
 config_path = root / "public/local-config/config-main.json"
 config = json.loads(read_text(config_path))
-config["app"]["name"] = {"cs": "GigaTIFF", "en": "GigaTIFF"}
+config["app"]["name"] = {
+    "cs": "GigaTIFF",
+    "en": "GigaTIFF",
+    "sk": "GigaTIFF",
+    "pl": "GigaTIFF",
+}
 config["app"]["logo"] = "/favicon.svg"
 config["app"]["adminClientUrl"] = f"http://{host}:{admin_port}"
 config["api"]["baseUrl"] = f"http://{host}:{api_port}"

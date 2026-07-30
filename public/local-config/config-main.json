@@ -3,7 +3,9 @@
                 "code":  "gigatiff",
                 "name":  {
                              "cs":  "GigaTIFF",
-                             "en":  "GigaTIFF"
+                             "en":  "GigaTIFF",
+                             "sk":  "GigaTIFF",
+                             "pl":  "GigaTIFF"
                          },
                 "contactEmail":  "",
                 "logo":  "/favicon.svg",
@@ -103,6 +105,12 @@
     "pages":  [
                   {
                       "id":  "terms",
+                      "label":  {
+                                    "cs":  "Podminky",
+                                    "en":  "Terms",
+                                    "sk":  "Podmienky",
+                                    "pl":  "Warunki"
+                                },
                       "content":  {
                                       "cs":  [
                                                  "local-config/html/terms/terms.cs.html",
@@ -112,7 +120,8 @@
                                                  "local-config/html/terms/terms.en.html",
                                                  "local-config/html/terms/terms2.en.html"
                                              ]
-                                  }
+                                  },
+                      "showInHeader":  false
                   }
               ]
 }
