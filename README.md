@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.13
+GigaTIFF Kramerius Stack: stack-0.1.14
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,9 +25,9 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.1.2
-  Kramerius web client v3:  3.0.22-beta
+  Kramerius web client v3:  3.0.23-beta
   Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
-  GigaTIFF server:          0.3.2
+  GigaTIFF server:          0.3.3
   Web-client auth shim:     0.1
 
 Services:
@@ -111,6 +111,13 @@ selection and reader link handling. The local configuration shape remains
 compatible with the previous stack. GigaTIFF `0.3.2` rebuilds the server image
 with Grok `v20.3.9`, including upstream decompressor fixes while keeping the
 hybrid JP2 `auto` backend policy.
+
+`stack-0.1.14` upgrades the Kramerius web client v3 to `3.0.23-beta` and the
+GigaTIFF server image to `0.3.3`. The web-client release continues the IBM Plex
+typography cleanup, fixes applying some settings changes, reorganizes right
+sidebar metadata, adds alternative title and ISMN display, and improves
+convolute search/reader behavior. GigaTIFF `0.3.3` rebuilds the server image
+with Grok `v20.3.10`.
 
 ## What This Stack Starts
 
@@ -283,18 +290,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.13`:
+Published image names for `stack-0.1.14`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.13
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.13
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.13
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.13
-ghcr.io/bezverec/gigatiff-server:0.3.2
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.14
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.14
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.14
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.14
+ghcr.io/bezverec/gigatiff-server:0.3.3
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.13`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.14`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
