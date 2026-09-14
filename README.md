@@ -1,7 +1,7 @@
 # GigaTIFF Kramerius Stack
 
 This repository contains a reproducible local or LAN test deployment for the
-GigaTIFF Kramerius Stack: Kramerius 7.2.1.2 connected to the GigaTIFF IIIF image
+GigaTIFF Kramerius Stack: Kramerius 7.2.2.1 connected to the GigaTIFF IIIF image
 server.
 
 It tracks configuration and installation scaffolding only. Runtime databases,
@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.14
+GigaTIFF Kramerius Stack: stack-0.1.15
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -24,21 +24,22 @@ Compatibility matrix:
 
 ```text
 Core:
-  Kramerius API:            7.2.1.2
-  Kramerius web client v3:  3.0.23-beta
-  Kramerius admin client:   c36565ff75591bc593bc042b31b83b7b6dd17869
-  GigaTIFF server:          0.3.3
+  Kramerius API:            7.2.2.1
+  Kramerius web client v3:  3.0.29
+  Kramerius admin client:   1.6.2 (cb16f71247d34780604fcc867eb9a884279e48c6)
+  GigaTIFF server:          0.3.4
   Web-client auth shim:     0.1
 
 Services:
-  Curator worker:           7.2.1.2
-  Public worker:            7.2.1.2
-  Process manager:          1.5
+  Curator worker:           7.2.2.1
+  Public worker:            7.2.2.1
+  Process manager:          1.5.2
   Solr:                     10.0.0
-  PostgreSQL:               18.4
-  Keycloak PostgreSQL:      14.10
+  Kramerius PostgreSQL:     18.6
+  Process PostgreSQL:       18.6
+  Keycloak PostgreSQL:      14.24
   Keycloak:                 22.0.11-1.10
-  Dragonfly:                1.30.3
+  Dragonfly:                1.40.2
 ```
 
 The machine-readable source of truth is `versions.toml`.
@@ -119,10 +120,28 @@ sidebar metadata, adds alternative title and ISMN display, and improves
 convolute search/reader behavior. GigaTIFF `0.3.3` rebuilds the server image
 with Grok `v20.3.10`.
 
+`stack-0.1.15` upgrades the Kramerius API and both workers to `7.2.2.1`, the
+web client to `3.0.29`, the required admin client to `1.6.2`, Process Manager
+to `1.5.2`, and GigaTIFF to `0.3.4` with Grok `20.4.9`. It also updates
+Dragonfly to `1.40.2`, the Kramerius and Process Manager PostgreSQL services to
+`18.6`, and the Keycloak PostgreSQL service to the latest compatible PostgreSQL
+14 patch release, `14.24`. The Keycloak database deliberately remains on major
+version 14 for this bundle; moving it to a newer PostgreSQL major requires a
+separate dump/restore migration.
+
+Kramerius 7.2.2 introduces KAPP licence synchronization, so this stack adds the
+`kapp-sync` Solr core from the upstream `v7.2.2.1` `installation.zip`. Its
+managed schema replaces the removed Solr 10 `LowerCaseTokenizerFactory` with a
+standard tokenizer followed by a lowercase filter. The existing GigaTIFF
+search-schema fixes remain in place. Existing collections should be reindexed
+when the new `containsLicenses` data is required. GigaTIFF `0.3.4` passed 60
+Linux unit tests and a 30-case JP2 pixel comparison against both OpenJPEG and
+Grok 20.3.10 before being pinned here.
+
 ## What This Stack Starts
 
-- Kramerius 7.2.1.2 API and workers.
-- PostgreSQL databases for Kramerius, Keycloak and the process manager.
+- Kramerius 7.2.2.1 API and workers.
+- Separate PostgreSQL databases for Kramerius, Keycloak and the process manager.
 - Solr 10 with user-managed cores.
 - Keycloak for OAuth2 authentication.
 - A small web-client auth shim for Keycloak login/token/logout routes.
@@ -290,18 +309,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.14`:
+Published image names for `stack-0.1.15`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.14
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.14
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.14
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.14
-ghcr.io/bezverec/gigatiff-server:0.3.3
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.15
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.15
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.15
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.15
+ghcr.io/bezverec/gigatiff-server:0.3.4
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.14`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.15`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
@@ -878,6 +897,15 @@ The Czech Hunspell dictionary files referenced by `managed-schema` are tracked
 with the Solr config so a fresh Solr core can start without missing analyzer
 resources.
 
+Kramerius `7.2.2` also adds the `kapp-sync` core. The upstream installation
+archive uses `solr.LowerCaseTokenizerFactory`, which is no longer available in
+Solr 10. The tracked `kapp-sync/conf/managed-schema` preserves its behavior with
+`solr.StandardTokenizerFactory` followed by `solr.LowerCaseFilterFactory`.
+Without this compatibility fix the core fails with `Error loading parsing
+schema` and `ClassNotFoundException: solr.LowerCaseTokenizerFactory`.
+`clean-bootstrap` verifies that the core loads and exposes its required `id`
+field.
+
 The `logs` core configuration is tracked as well. Kramerius writes access and
 DNNT statistics there when documents and pages are opened. Its schema keeps
 `date.str` as a string, year fields as integers and an `*_str` dynamic field for
@@ -1181,6 +1209,17 @@ docker compose \
 For side-by-side testing, use alternate ports as shown in `Default Install`.
 After the new stack is verified, switch external routing or bookmarks to the new
 ports. Keep the previous stack directory until the new one is confirmed.
+
+If an intentional in-place upgrade adds a new bind-mounted Solr core, grant the
+Solr container write access before restarting it. Clean installs already do
+this in `prepare-clean-stack.sh`:
+
+```bash
+chmod -R a+rwX mnt/containers/solr/data/<new-core>
+```
+
+Without this step the schema can load successfully while core creation still
+fails with `AccessDeniedException: /var/solr/data/<new-core>/data`.
 
 When changing Kramerius, Solr, Keycloak or admin-client versions:
 

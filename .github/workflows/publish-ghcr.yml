@@ -218,7 +218,7 @@ jobs:
             org.opencontainers.image.description=IIIF-compatible TIFF/BigTIFF/JPEG2000 image server
             org.opencontainers.image.source=${{ needs.versions.outputs.gigatiff_repository }}
             org.opencontainers.image.version=${{ needs.versions.outputs.gigatiff_server_version }}
-            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.licenses=GPL-3.0-only
           cache-from: type=gha,scope=gigatiff-server
           cache-to: type=gha,mode=min,scope=gigatiff-server
           sbom: true

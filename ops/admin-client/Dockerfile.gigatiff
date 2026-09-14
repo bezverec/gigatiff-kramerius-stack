@@ -28,6 +28,7 @@ RUN set -eux; \
       "  languages: ['cs', 'en']," \
       "  cdkMode: false," \
       "  devMode: false," \
+      "  clientSettingsEnabled: true," \
       "  krameriusInstance: 'GigaTIFF'" \
       '};' \
       'EOF' \

@@ -1,6 +1,6 @@
 services:
   gigatiff-dragonfly:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.30.3
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.40.2
     command:
       - --cache_mode=true
       - --maxmemory=2gb
