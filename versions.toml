@@ -21,7 +21,7 @@ kramerius_admin_client_repository = "https://github.com/ceskaexpedice/kramerius-
 kramerius_admin_client_ref = "cb16f71247d34780604fcc867eb9a884279e48c6"
 gigatiff_server_version = "0.3.4"
 gigatiff_repository = "https://github.com/bezverec/gigatiff"
-gigatiff_ref = "6cd4573271f93273ef1ee837e9418f53e4678e0b"
+gigatiff_ref = "6cd4573acc05962fcc58342a204b9dc2cfcba3eb"
 
 [services]
 curator_worker = "ceskaexpedice/curator-worker:7.2.2.1"
