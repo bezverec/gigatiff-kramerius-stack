@@ -1,7 +1,7 @@
 # GigaTIFF Kramerius Stack
 
 This repository contains a reproducible local or LAN test deployment for the
-GigaTIFF Kramerius Stack: Kramerius 7.2.2.1 connected to the GigaTIFF IIIF image
+GigaTIFF Kramerius Stack: Kramerius 7.2.2.3 connected to the GigaTIFF IIIF image
 server.
 
 It tracks configuration and installation scaffolding only. Runtime databases,
@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.15
+GigaTIFF Kramerius Stack: stack-0.1.16
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -24,15 +24,15 @@ Compatibility matrix:
 
 ```text
 Core:
-  Kramerius API:            7.2.2.1
-  Kramerius web client v3:  3.0.29
+  Kramerius API:            7.2.2.3
+  Kramerius web client v3:  3.0.30
   Kramerius admin client:   1.6.2 (cb16f71247d34780604fcc867eb9a884279e48c6)
-  GigaTIFF server:          0.3.4
+  GigaTIFF server:          0.3.5
   Web-client auth shim:     0.1
 
 Services:
-  Curator worker:           7.2.2.1
-  Public worker:            7.2.2.1
+  Curator worker:           7.2.2.3
+  Public worker:            7.2.2.3
   Process manager:          1.5.2
   Solr:                     10.0.0
   Kramerius PostgreSQL:     18.6
@@ -138,9 +138,21 @@ when the new `containsLicenses` data is required. GigaTIFF `0.3.4` passed 60
 Linux unit tests and a 30-case JP2 pixel comparison against both OpenJPEG and
 Grok 20.3.10 before being pinned here.
 
+`stack-0.1.16` upgrades the Kramerius API and both workers to `7.2.2.3`, the
+web client to `3.0.30`, and GigaTIFF to `0.3.5` with Grok `20.4.12`.
+Kramerius includes statistics-logging, OCR encoding, collection, IIIF-resource
+and indexer fixes; the curator worker image is also smaller. The web-client
+release reduces IIIF tile requests and improves immediate rendering, mobile
+panels, watermarks, search snippets and document actions. The upstream
+Kramerius `solr-9.x` directories from `7.2.2.1` and `7.2.2.3` were compared
+file by file and are identical, so this maintenance update needs no Solr schema
+replacement or reindex by itself. GigaTIFF passed all 60 Linux tests plus two
+36-case JP2 pixel suites against OpenJPEG and Grok `20.4.9`; the hybrid `auto`
+backend remains the default after first-load benchmarking.
+
 ## What This Stack Starts
 
-- Kramerius 7.2.2.1 API and workers.
+- Kramerius 7.2.2.3 API and workers.
 - Separate PostgreSQL databases for Kramerius, Keycloak and the process manager.
 - Solr 10 with user-managed cores.
 - Keycloak for OAuth2 authentication.
@@ -309,18 +321,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.15`:
+Published image names for `stack-0.1.16`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.15
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.15
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.15
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.15
-ghcr.io/bezverec/gigatiff-server:0.3.4
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.16
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.16
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.16
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.16
+ghcr.io/bezverec/gigatiff-server:0.3.5
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.15`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.16`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
