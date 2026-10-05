@@ -1,7 +1,7 @@
 [stack]
 name = "GigaTIFF Kramerius Stack"
 repository = "https://github.com/bezverec/gigatiff-kramerius-stack"
-version = "stack-0.1.16"
+version = "stack-0.1.17"
 runtime_directory = "gigatiff-kramerius"
 
 [ghcr]
@@ -15,13 +15,13 @@ gigatiff_server_image = "gigatiff-server"
 [core]
 kramerius_api_version = "7.2.2.3"
 kramerius_api_image = "ceskaexpedice/kramerius:7.2.2.3"
-kramerius_web_client_version = "3.0.30"
-kramerius_web_client_base_image = "trinera/cdk-client:3.0.30"
+kramerius_web_client_version = "3.0.32"
+kramerius_web_client_base_image = "trinera/cdk-client:3.0.32"
 kramerius_admin_client_repository = "https://github.com/ceskaexpedice/kramerius-admin-client"
 kramerius_admin_client_ref = "cb16f71247d34780604fcc867eb9a884279e48c6"
-gigatiff_server_version = "0.3.5"
+gigatiff_server_version = "0.3.6"
 gigatiff_repository = "https://github.com/bezverec/gigatiff"
-gigatiff_ref = "05ffc7b4147a6602e8d3f66e0d93f50099cd6b01"
+gigatiff_ref = "8fd39ef8babad5dae1aace5d7eeda9c586353f36"
 
 [services]
 curator_worker = "ceskaexpedice/curator-worker:7.2.2.3"
@@ -31,4 +31,4 @@ solr = "solr:10.0.0"
 postgresql = "postgres:18.6"
 keycloak_postgresql = "postgres:14.24"
 keycloak = "ceskaexpedice/keycloak_eduid:22.0.11-1.10"
-dragonfly = "docker.dragonflydb.io/dragonflydb/dragonfly:v1.40.2"
+dragonfly = "docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.0"

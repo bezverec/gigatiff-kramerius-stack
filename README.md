@@ -16,7 +16,7 @@ own upstream meaning.
 Current bundle:
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.16
+GigaTIFF Kramerius Stack: stack-0.1.17
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -25,9 +25,9 @@ Compatibility matrix:
 ```text
 Core:
   Kramerius API:            7.2.2.3
-  Kramerius web client v3:  3.0.30
+  Kramerius web client v3:  3.0.32
   Kramerius admin client:   1.6.2 (cb16f71247d34780604fcc867eb9a884279e48c6)
-  GigaTIFF server:          0.3.5
+  GigaTIFF server:          0.3.6
   Web-client auth shim:     0.1
 
 Services:
@@ -39,7 +39,7 @@ Services:
   Process PostgreSQL:       18.6
   Keycloak PostgreSQL:      14.24
   Keycloak:                 22.0.11-1.10
-  Dragonfly:                1.40.2
+  Dragonfly:                2.0.0
 ```
 
 The machine-readable source of truth is `versions.toml`.
@@ -150,6 +150,24 @@ replacement or reindex by itself. GigaTIFF passed all 60 Linux tests plus two
 36-case JP2 pixel suites against OpenJPEG and Grok `20.4.9`; the hybrid `auto`
 backend remains the default after first-load benchmarking.
 
+`stack-0.1.17` upgrades the web client to `3.0.32`, GigaTIFF to `0.3.6`
+with Grok `20.4.15`, and Dragonfly to `2.0.0`. The client includes the
+`3.0.31` and `3.0.32` reader, IIIF tile, metadata, search and favorites fixes.
+The upstream local-config shape was compared with `3.0.30`; no mandatory
+JSON migration is needed for this single-library deployment. The stack retains
+local configuration, the same-origin auth bridge, terms/login fallback,
+GigaTIFF favicon and square-corner override, without replacing upstream light
+or dark palettes. Kramerius API/workers, Solr and all PostgreSQL versions are
+unchanged; this bundle itself does not require a schema update or reindex.
+
+Before publication, Grok `20.4.15` passed all 60 Linux unit tests, all 36 JP2
+pixel comparisons against OpenJPEG (maximum channel delta 1), and all 36
+comparisons against Grok `20.4.12` with exact pixel equality. The suite covers
+six small/medium JP2 files, including the earlier lossy RPCL regression;
+the multi-gigabyte map masters are not included in this run. Dragonfly `2.0.0`
+restored all 884 keys from a copy of the previous snapshot and passed response
+cache hit/miss, byte-equality, per-identifier purge, TTL and readiness checks.
+
 ## What This Stack Starts
 
 - Kramerius 7.2.2.3 API and workers.
@@ -161,6 +179,85 @@ backend remains the default after first-load benchmarking.
 - Kramerius admin client.
 - GigaTIFF IIIF image server with Dragonfly response cache.
 - Optional Dockhand and Dashy helper tools.
+
+## Component Architecture
+
+```mermaid
+flowchart TB
+    Browser["Browser"]
+    subgraph Stack["GigaTIFF Kramerius Stack"]
+        Web["Web client v3 / Nginx"]
+        Admin["Admin client / Nginx"]
+        Auth["Web-client auth shim"]
+        Keycloak["Keycloak / OAuth2"]
+        API["Kramerius API"]
+        Solr["Solr / search indexes"]
+        Akubra[("Akubra / object store")]
+        Images[("TIFF / JP2 / audio files")]
+        Giga["GigaTIFF / IIIF"]
+        Cache["Dragonfly / bounded response cache"]
+        PM["Process Manager"]
+        Curator["Curator worker"]
+        Public["Public worker"]
+        Locks["Hazelcast / locks"]
+        Memcache["Memcached / API cache"]
+        KDB[("Kramerius PostgreSQL")]
+        PDB[("Process PostgreSQL")]
+        AuthDB[("Keycloak PostgreSQL")]
+        Bootstrap["One-shot bootstrap / configuration and permissions"]
+        Config[("Runtime configuration")]
+        Dashy["Dashy / optional service links"]
+        Dockhand["Dockhand / optional container management"]
+    end
+    Docker["Docker Engine / stack containers"]
+    Browser --> Web
+    Browser --> Admin
+    Browser -->|"OAuth2 redirects"| Keycloak
+    Browser -->|"configured API URL / API and IIIF"| API
+    Web -->|"same-origin /search proxy when used"| API
+    Admin --> API
+    Web -->|"/auth proxy"| Auth
+    Auth --> Keycloak
+    Admin -->|"OAuth2"| Keycloak
+    API -->|"token verification"| Keycloak
+    Keycloak --> AuthDB
+    API --> Solr
+    API --> KDB
+    API --> Akubra
+    API --> Memcache
+    API -->|"IIIF proxy / access checks"| Giga
+    Giga -->|"read-only"| Images
+    Giga --> Cache
+    API --> PM
+    PM --> PDB
+    PM --> Curator
+    PM --> Public
+    Curator --> Akubra
+    Curator --> Images
+    Curator --> Solr
+    Public --> Solr
+    API --> Locks
+    Curator --> Locks
+    Bootstrap -.->|"initializes"| Config
+    API --> Config
+    Curator --> Config
+    Public --> Config
+    Browser -.-> Dashy
+    Browser -.-> Dockhand
+    Dockhand -.->|"Docker socket"| Docker
+```
+
+The browser loads the frontend from Nginx and calls the configured Kramerius API
+URL for API and IIIF requests. Nginx also provides a same-origin `/search` proxy
+and the `/auth` bridge; the selected API origin depends on runtime configuration.
+Kramerius performs document access checks before forwarding image requests to
+GigaTIFF. The image server reads the image directory without write access.
+Akubra object storage, image files, databases, Solr indexes and cache volumes are
+runtime data, not image contents. Bootstrap initializes configuration and
+permissions once; it is not a continuously running service. Dashy only links to
+services, while Dockhand has privileged access to the Docker socket and should
+be limited to trusted administrators. Solid arrows show runtime communication;
+dotted arrows show setup and optional management paths.
 
 ## Repository Layout
 
@@ -321,18 +418,18 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.16`:
+Published image names for `stack-0.1.17`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.16
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.16
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.16
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.16
-ghcr.io/bezverec/gigatiff-server:0.3.5
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.17
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.17
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.17
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.17
+ghcr.io/bezverec/gigatiff-server:0.3.6
 ```
 
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.16`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.17`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
