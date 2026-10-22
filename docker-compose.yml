@@ -1,6 +1,6 @@
 services:
   kramerius:
-    image: ceskaexpedice/kramerius:7.2.2.3
+    image: ceskaexpedice/kramerius:7.2.2.4
     user: "0"
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${KRAMERIUS_API_PORT:-8088}:8080"
@@ -29,7 +29,7 @@ services:
       solr:
         condition: service_healthy
       krameriusPostgres:
-        condition: service_started
+        condition: service_healthy
       keycloak_eduid:
         condition: service_healthy
       lock_server:
@@ -48,9 +48,15 @@ services:
     ports:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${KRAMERIUS_DB_PORT:-15432}:5432"
     restart: "always"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
 
   memcached:
-    image: memcached:latest
+    image: memcached:1.6.45-trixie
     command: memcached
     restart: "always"
 
@@ -81,6 +87,12 @@ services:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
 
   keycloak_eduid:
     image: ceskaexpedice/keycloak_eduid:22.0.11-1.10
@@ -108,10 +120,12 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8990"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 240s
     restart: "always"
     depends_on:
-      - keycloakPostgres_eduid
+      keycloakPostgres_eduid:
+        condition: service_healthy
 
   auth-shim:
     build:
@@ -150,10 +164,11 @@ services:
       - "${KRAMERIUS_BIND_ADDR:-127.0.0.1}:${PROCESS_DB_PORT:-25432}:5432"
     restart: "always"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 12
+      start_period: 120s
 
   processManager:
     image: "ceskaexpedice/process-manager:1.5.2"
@@ -177,7 +192,7 @@ services:
       start_period: 30s
 
   curatorWorker:
-    image: "ceskaexpedice/curator-worker:7.2.2.3"
+    image: "ceskaexpedice/curator-worker:7.2.2.4"
     depends_on:
       processPostgres:
         condition: service_healthy
@@ -202,7 +217,7 @@ services:
     restart: "always"
 
   publicWorker:
-    image: "ceskaexpedice/public-worker:7.2.2.3"
+    image: "ceskaexpedice/public-worker:7.2.2.4"
     depends_on:
       processPostgres:
         condition: service_healthy

@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+!.env.example
+.local-build
+logs
+temp
+cache
+mnt
+*.tar
+*.tar.gz

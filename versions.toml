@@ -1,7 +1,7 @@
 [stack]
 name = "GigaTIFF Kramerius Stack"
 repository = "https://github.com/bezverec/gigatiff-kramerius-stack"
-version = "stack-0.1.17"
+version = "stack-0.1.18"
 runtime_directory = "gigatiff-kramerius"
 
 [ghcr]
@@ -13,22 +13,36 @@ bootstrap_image = "gigatiff-kramerius-bootstrap"
 gigatiff_server_image = "gigatiff-server"
 
 [core]
-kramerius_api_version = "7.2.2.3"
-kramerius_api_image = "ceskaexpedice/kramerius:7.2.2.3"
-kramerius_web_client_version = "3.0.32"
-kramerius_web_client_base_image = "trinera/cdk-client:3.0.32"
+kramerius_api_version = "7.2.2.4"
+kramerius_api_image = "ceskaexpedice/kramerius:7.2.2.4"
+kramerius_web_client_version = "3.0.35"
+kramerius_web_client_base_image = "trinera/cdk-client:3.0.35"
 kramerius_admin_client_repository = "https://github.com/ceskaexpedice/kramerius-admin-client"
 kramerius_admin_client_ref = "cb16f71247d34780604fcc867eb9a884279e48c6"
-gigatiff_server_version = "0.3.6"
+gigatiff_server_version = "0.3.7"
 gigatiff_repository = "https://github.com/bezverec/gigatiff"
-gigatiff_ref = "8fd39ef8babad5dae1aace5d7eeda9c586353f36"
+gigatiff_ref = "e55904db3c1160b047f8d7d41ee88b50c01e95a6"
 
 [services]
-curator_worker = "ceskaexpedice/curator-worker:7.2.2.3"
-public_worker = "ceskaexpedice/public-worker:7.2.2.3"
+curator_worker = "ceskaexpedice/curator-worker:7.2.2.4"
+public_worker = "ceskaexpedice/public-worker:7.2.2.4"
 process_manager = "ceskaexpedice/process-manager:1.5.2"
 solr = "solr:10.0.0"
 postgresql = "postgres:18.6"
 keycloak_postgresql = "postgres:14.24"
 keycloak = "ceskaexpedice/keycloak_eduid:22.0.11-1.10"
-dragonfly = "docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.0"
+dragonfly = "docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2"
+memcached = "memcached:1.6.45-trixie"
+hazelcast = "ceskaexpedice/hazelcast-locks-server:2.0"
+
+[tools]
+dockhand = "fnsys/dockhand:v1.0.54"
+dashy = "lissy93/dashy:4.8.0"
+
+[build]
+rust = "rust:1.99.1-trixie"
+grok = "v20.4.19"
+debian = "debian:trixie-20261020-slim"
+auth_shim_python = "python:3.15.1-alpine3.24"
+admin_node = "node:24.22.1-trixie"
+admin_httpd = "httpd:2.4.69-trixie"

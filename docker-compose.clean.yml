@@ -33,7 +33,7 @@ services:
       keycloak_eduid:
         condition: service_healthy
       krameriusPostgres:
-        condition: service_started
+        condition: service_healthy
       processPostgres:
         condition: service_healthy
     environment:

@@ -1,7 +1,7 @@
 # GigaTIFF Kramerius Stack
 
 This repository contains a reproducible local or LAN test deployment for the
-GigaTIFF Kramerius Stack: Kramerius 7.2.2.3 connected to the GigaTIFF IIIF image
+GigaTIFF Kramerius Stack: Kramerius 7.2.2.4 connected to the GigaTIFF IIIF image
 server.
 
 It tracks configuration and installation scaffolding only. Runtime databases,
@@ -13,10 +13,10 @@ files, logs, caches and temporary files are intentionally ignored.
 Stack version means a tested integration bundle. Component versions keep their
 own upstream meaning.
 
-Current bundle:
+Current local candidate (not published to GHCR):
 
 ```text
-GigaTIFF Kramerius Stack: stack-0.1.17
+GigaTIFF Kramerius Stack: stack-0.1.18
 Runtime directory:          gigatiff-kramerius
 ```
 
@@ -24,25 +24,45 @@ Compatibility matrix:
 
 ```text
 Core:
-  Kramerius API:            7.2.2.3
-  Kramerius web client v3:  3.0.32
+  Kramerius API:            7.2.2.4
+  Kramerius web client v3:  3.0.35
   Kramerius admin client:   1.6.2 (cb16f71247d34780604fcc867eb9a884279e48c6)
-  GigaTIFF server:          0.3.6
+  GigaTIFF server:          0.3.7 (Grok 20.4.19)
   Web-client auth shim:     0.1
 
 Services:
-  Curator worker:           7.2.2.3
-  Public worker:            7.2.2.3
+  Curator worker:           7.2.2.4
+  Public worker:            7.2.2.4
   Process manager:          1.5.2
   Solr:                     10.0.0
   Kramerius PostgreSQL:     18.6
   Process PostgreSQL:       18.6
   Keycloak PostgreSQL:      14.24
   Keycloak:                 22.0.11-1.10
-  Dragonfly:                2.0.0
+  Dragonfly:                2.0.2
+  Memcached:                1.6.45 (Debian Trixie)
+  Hazelcast locks server:   2.0
+
+Optional tools:
+  Dockhand:                 1.0.54
+  Dashy:                    4.8.0
+
+Build/runtime bases:
+  Rust:                     1.99.1 / Debian Trixie
+  Python auth shim:         3.15.1 / Alpine 3.24
+  Node admin build:         24.22.1 / Debian Trixie
+  Apache admin runtime:     2.4.69 / Debian Trixie
+  Debian snapshot:          trixie-20261020-slim
 ```
 
 The machine-readable source of truth is `versions.toml`.
+
+The latest published GHCR bundle remains `stack-0.1.17` with GigaTIFF `0.3.6`.
+The `stack-0.1.18` bundle is prepared for publication from the local workstation,
+without GitHub Actions. The lock pins the committed GigaTIFF source; publication
+requires clean source checkouts. Keep deployment defaults on the previous
+bundle until all five registry uploads have been verified. No release tag or
+publish workflow is needed for this local publication path.
 
 `stack-0.1.5` refreshes the GigaTIFF server image to `0.3.1`. That image builds
 Grok from upstream commit `06c96bfbc38c74d386ce27018002d3febfff8f0c`, which
@@ -168,9 +188,69 @@ the multi-gigabyte map masters are not included in this run. Dragonfly `2.0.0`
 restored all 884 keys from a copy of the previous snapshot and passed response
 cache hit/miss, byte-equality, per-identifier purge, TTL and readiness checks.
 
+`stack-0.1.18` updates Kramerius and both workers to `7.2.2.4`, the web
+client to `3.0.35`, and GigaTIFF to `0.3.7` with Grok `20.4.19`. It also
+updates Dragonfly, Memcached, optional tools, Rust dependencies and build bases
+to the versions listed above. The upstream Kramerius comparison contains no
+Solr schema changes, so existing local schema fixes remain intact.
+
+PostgreSQL healthchecks now wait for the final TCP listener, not the temporary
+Unix-socket server used during `initdb`. All databases have a cold-start grace
+period, and Keycloak/Kramerius/bootstrap wait for database health. This avoids
+starting application services while first-run database initialization is still
+in progress on a busy workstation.
+
+The web client adds lock-based licences. Local configuration explicitly sets
+`locks.idleTimeoutSec: 600` and `locks.warningSec: 60`; actual licence names,
+reader limits and lock intervals remain controlled by Kramerius. The existing
+disabled analytics/map integrations, same-origin auth bridge, terms/login,
+branding and square-corner override are retained. Dragonfly's new daily version
+check also sends deployment telemetry, so the stack explicitly disables it with
+`--version_check=false`, retaining the 2 GiB bounded cache configuration.
+
+The login-shortcut fallback now recognizes the English `Log in` and `Sign in`
+labels, including wrapped whitespace. Otherwise it would overlap the native
+header button in English. Seven dependency-free regression tests cover the
+English/Czech labels, hidden native controls and existing sessions:
+
+```powershell
+node --test scripts/tests/login-shortcut.test.cjs
+```
+
+Local candidate verification used a fresh, empty Compose project on Docker
+Desktop, not the ZimaBoard installation. Bootstrap completed with all five Solr
+cores (`search`, `processing`, `logs`, `sdnnt-sync`, `kapp-sync`) and no core
+initialization failures. The bootstrap probe for the logs core now checks its
+actual `date` field instead of the nonexistent `created` field. API version,
+anonymous user access, a Keycloak token followed by authenticated API access,
+the terms page and the login redirect were checked. No digital documents were
+imported. Dragonfly 2.0.2 passed response miss/hit and byte equality, per-image
+purge, TTL expiry and readiness checks.
+
+GigaTIFF's local Linux workspace passed 67 tests. The six-file JP2 suite passed
+36 direct-Grok and 36 hybrid comparisons against OpenJPEG with maximum channel
+delta 1; an executor-only comparison passed all 36 with exact pixel equality.
+The large `mapa2` masters were not available on this PC. A controlled follow-up
+isolated the first-load slowdown to Grok's embedded Mercury path, not the Rust
+dependency refresh. The server image now defaults to `GRK_MERCURY=0`, retaining
+classic Grok FFI and the hybrid `auto` backend policy. Its rebuilt image passed
+all 36 comparisons against the previous Grok reference with exact pixel equality.
+See the [GigaTIFF investigation report](https://github.com/bezverec/gigatiff/blob/e55904db3c1160b047f8d7d41ee88b50c01e95a6/docs/benchmarks/2026-10-22-grok.md)
+for the benchmark matrix and limitations. Override the image environment with
+`GRK_MERCURY=1` only for an explicit comparison. Large masters, other coding
+modes and native-Linux load still need deployment-specific validation.
+
+PostgreSQL 18.6/14.24, Solr 10.0.0, Process Manager 1.5.2, admin client 1.6.2,
+the Czech Keycloak 22.0.11-1.10 image and Hazelcast 2.0 remain the latest releases
+in their selected distributions/compatible lines as checked on 2026-10-22.
+This does not mean Keycloak 22 is current upstream. Its replacement, together
+with the PostgreSQL 14 database migration (support ends 2026-11-12), requires a
+separate backed-up integration upgrade. Node stays on the Angular-compatible
+24 line rather than adopting an unsupported newer major.
+
 ## What This Stack Starts
 
-- Kramerius 7.2.2.3 API and workers.
+- Kramerius 7.2.2.4 API and workers.
 - Separate PostgreSQL databases for Kramerius, Keycloak and the process manager.
 - Solr 10 with user-managed cores.
 - Keycloak for OAuth2 authentication.
@@ -326,8 +406,8 @@ it from `../kramerius-admin-client`.
 
 ## Default Install
 
-The preferred installation path is the clean Buildah stack. It is the only
-recommended path for a reproducible test deployment.
+The preferred Linux installation path is the clean Buildah stack. Windows local
+builds use the same clean configuration and Dockerfiles, as described below.
 
 Do not copy a running Kramerius directory to create a new install. A live
 directory may contain PostgreSQL data, Solr indexes, Akubra object-store files,
@@ -515,6 +595,99 @@ docker compose \
 Use a new target directory for every clean deployment. Do not run
 `prepare-clean-stack.sh` over a directory that already contains a live database,
 Solr index or imported documents.
+
+## Local Windows Builds Without Actions
+
+Buildah remains the default Linux build path. On Windows, the same Dockerfiles
+can be built with Docker Desktop in Linux-container mode, without Actions,
+WSL shell scripts or a registry login. Use a Docker Desktop installation with
+the containerd image store so local images retain SBOM/provenance attestations.
+This builds Linux `amd64` containers, not desktop ZIP releases.
+
+Keep `gigatiff`, this stack checkout and `kramerius-admin-client` side by side.
+The admin checkout must be clean and match the exact ref in `versions.toml`
+(currently tag `v1.6.2`). GigaTIFF is deliberately built from the current local
+worktree; its workspace version must match the lock. This permits testing an
+uncommitted candidate without pretending it is a published immutable release.
+
+```powershell
+.\scripts\build-local-images.ps1 -BuildJobs 4
+```
+
+The script reads TOML with Python in a container, refreshes base images by
+default, builds all five images and loads them into the local Docker engine.
+Without `-Publish`, it never pushes images. Neither mode creates Git tags,
+invokes Actions, prunes Docker data or changes running services. The local aliases used by `docker-compose.clean.yml`
+are updated locally:
+
+```text
+localhost/gigatiff-kramerius-web-client:clean
+localhost/gigatiff-kramerius-auth-shim:clean
+localhost/gigatiff-kramerius-admin-client:clean
+localhost/gigatiff-kramerius-bootstrap:clean
+gigatiff-server:local
+```
+
+Versioned local tags use `stack-0.1.18` and server `0.3.7`; they do not exist
+on GHCR yet. Logs, Buildx metadata and `images.json` live under ignored
+`.local-build/<timestamp>/`, including source revisions, dirty-worktree flags
+and image IDs. Select a subset with `-Components web-client,auth-shim`;
+use `-SkipPull` only when deliberately reusing already resolved base images.
+No host Python installation is required.
+
+### Publish From Windows
+
+After local verification, publish directly from Docker Desktop without using
+GitHub Actions. First commit the GigaTIFF source, update `core.gigatiff_ref` in
+`versions.toml` to that exact commit, and commit the stack. Push both source
+commits to their repositories before publishing. The script rejects dirty
+worktrees and a GigaTIFF revision that differs from the lock.
+
+Authenticate interactively with a GitHub personal access token (classic) with
+`write:packages`; do not put the token into scripts, logs or command arguments:
+
+```powershell
+docker login ghcr.io -u bezverec
+.\scripts\build-local-images.ps1 -Publish -BuildJobs 4
+```
+
+`-Publish` replaces the local export with a registry push, retains SBOM and
+provenance attestations, and records and verifies each remote image digest.
+Only the five custom images are uploaded; databases, imported documents and
+caches are not part of the images. The platform is Linux `amd64`, not a
+multi-architecture release. It does not deploy or restart any running stack.
+Keep the previous published tags in deployment defaults until all five uploads
+have been verified, then update the GHCR override, `.env.example` and both
+endpoint configuration helpers together.
+
+For a loopback-only Docker Desktop test, keep Keycloak's browser URL and its
+Docker-network alias consistent:
+
+```powershell
+.\scripts\configure-endpoints.ps1 -PublicHost 127.0.0.1 `
+  -KeycloakPublicHost keycloak.localhost -KeycloakPort 8990
+```
+
+Browsers resolve `keycloak.localhost` to loopback, while containers resolve the
+same name through the existing Docker network alias. Use port `8990` on both
+sides for this setup. `127.0.0.1` in the backend's `keycloak.json` would instead
+refer to the Kramerius container itself, breaking authenticated API calls even
+when the browser can obtain a token. For LAN deployments, retain the reachable
+host address and port configured by **Default Install**.
+
+Reuse the configuration steps in **Default Install**, then run the prepared
+runtime with `docker-compose.clean.yml` and `up -d --no-build`. Do not use the
+GHCR override for local candidate tags: its `pull_policy: always` deliberately
+requires published images. The last published tags and GHCR defaults stay at
+`stack-0.1.17` / `0.3.6` until publication is explicitly requested.
+
+GigaTIFF's complete Linux test suite can also run locally without exporting a
+large builder image:
+
+```powershell
+docker buildx build --target verify --output type=cacheonly `
+  --build-arg GIGATIFF_BUILD_JOBS=4 ..\gigatiff
+```
 
 ## Configuration
 

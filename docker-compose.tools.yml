@@ -2,7 +2,7 @@ services:
   dockhand:
     profiles:
       - tools
-    image: fnsys/dockhand:latest
+    image: fnsys/dockhand:v1.0.54
     container_name: gigatiff-kramerius-dockhand
     restart: unless-stopped
     ports:
@@ -15,7 +15,7 @@ services:
   dockhand-init:
     profiles:
       - tools
-    image: fnsys/dockhand:latest
+    image: fnsys/dockhand:v1.0.54
     container_name: gigatiff-kramerius-dockhand-init
     depends_on:
       - dockhand
@@ -28,7 +28,7 @@ services:
   dashy:
     profiles:
       - tools
-    image: lissy93/dashy:latest
+    image: lissy93/dashy:4.8.0
     container_name: gigatiff-kramerius-dashy
     restart: unless-stopped
     ports:

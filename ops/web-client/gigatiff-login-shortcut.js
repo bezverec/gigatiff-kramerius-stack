@@ -22,8 +22,8 @@
       var node = nodes[index];
       if (node.id === buttonId) continue;
 
-      var text = (node.textContent || "").trim().toLowerCase();
-      if (text !== "přihlásit se" && text !== "prihlasit se" && text !== "login") continue;
+      var text = (node.textContent || "").trim().toLowerCase().replace(/\s+/g, " ");
+      if (["přihlásit se", "prihlasit se", "login", "log in", "sign in"].indexOf(text) === -1) continue;
 
       var style = window.getComputedStyle(node);
       var rect = node.getBoundingClientRect();

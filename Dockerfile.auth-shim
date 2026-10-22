@@ -1,4 +1,4 @@
-FROM python:3.12-alpine
+FROM python:3.15.1-alpine3.24
 
 LABEL org.opencontainers.image.title="GigaTIFF Kramerius Auth Shim" \
       org.opencontainers.image.description="Small OAuth2 bridge for the Kramerius web client in the tested stack bundle" \

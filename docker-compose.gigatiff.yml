@@ -1,10 +1,11 @@
 services:
   gigatiff-dragonfly:
-    image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.0
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v2.0.2
     command:
       - --cache_mode=true
       - --maxmemory=2gb
       - --proactor_threads=4
+      - --version_check=false
     ulimits:
       memlock: -1
     volumes:

@@ -115,7 +115,7 @@ require_field "search" "authors.aut.facet"
 require_field "search" "coords.is_point"
 require_field "search" "coords.bbox"
 require_field "kapp-sync" "id"
-warn_field "logs" "created"
+warn_field "logs" "date"
 
 if [ -f /ops/sql/grant-public-read.sql ]; then
   log "applying public read SQL helper"
