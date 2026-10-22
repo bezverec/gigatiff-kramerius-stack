@@ -1,0 +1,34 @@
+{
+  "stack_version": "stack-0.1.18",
+  "published_date": "2026-10-22",
+  "platform": "linux/amd64",
+  "stack_image_source_revision": "82880c327adbcba632d80984b87de2c73cfcf033",
+  "gigatiff_image_source_revision": "e55904db3c1160b047f8d7d41ee88b50c01e95a6",
+  "admin_upstream_revision": "cb16f71247d34780604fcc867eb9a884279e48c6",
+  "sbom": true,
+  "provenance": true,
+  "anonymous_pull_verified": true,
+  "images": [
+    {
+      "image": "ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.18",
+      "digest": "sha256:0eca7dfe6fb4af8cb8d930b517a59a9348f0449392e8879550fbb40e3397706c"
+    },
+    {
+      "image": "ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.18",
+      "digest": "sha256:43e1c02c891f8a78dc28f7ba67ea80abd565a5bc779a44f808e1fefffa9701a8"
+    },
+    {
+      "image": "ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.18",
+      "digest": "sha256:f6bd5f9218e2eefacf25a5f48b454cd8ca3b002e9252cb4a05fd8c993721f775"
+    },
+    {
+      "image": "ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.18",
+      "digest": "sha256:22e5e55fc4fd0d7916de0234bc3ebfa1ee1254248ef40b8dd12a3880fbd79df2"
+    },
+    {
+      "image": "ghcr.io/bezverec/gigatiff-server:0.3.7",
+      "digest": "sha256:0fe6a79e7813886e134054cbcd83bca60c3bd953c4b7d15430227dd9957019b6",
+      "environment": { "GRK_MERCURY": "0" }
+    }
+  ]
+}

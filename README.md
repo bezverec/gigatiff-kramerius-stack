@@ -13,7 +13,7 @@ files, logs, caches and temporary files are intentionally ignored.
 Stack version means a tested integration bundle. Component versions keep their
 own upstream meaning.
 
-Current local candidate (not published to GHCR):
+Current published GHCR bundle:
 
 ```text
 GigaTIFF Kramerius Stack: stack-0.1.18
@@ -57,12 +57,12 @@ Build/runtime bases:
 
 The machine-readable source of truth is `versions.toml`.
 
-The latest published GHCR bundle remains `stack-0.1.17` with GigaTIFF `0.3.6`.
-The `stack-0.1.18` bundle is prepared for publication from the local workstation,
-without GitHub Actions. The lock pins the committed GigaTIFF source; publication
-requires clean source checkouts. Keep deployment defaults on the previous
-bundle until all five registry uploads have been verified. No release tag or
-publish workflow is needed for this local publication path.
+The published GHCR bundle is `stack-0.1.18` with GigaTIFF `0.3.7`, built directly
+on the local workstation without GitHub Actions on 2026-10-22. All five images
+were pulled successfully and verified for anonymous access, source revision
+labels, SBOM and provenance. The platform is Linux `amd64`; this is not a
+multi-architecture release. The lock pins the exact GigaTIFF image source.
+Publishing did not deploy or restart the ZimaBoard installation.
 
 `stack-0.1.5` refreshes the GigaTIFF server image to `0.3.1`. That image builds
 Grok from upstream commit `06c96bfbc38c74d386ce27018002d3febfff8f0c`, which
@@ -498,18 +498,24 @@ storage images.
 The same stack can use prebuilt images from GitHub Container Registry instead
 of local Buildah images.
 
-Published image names for `stack-0.1.17`:
+Published image names for `stack-0.1.18`:
 
 ```text
-ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.17
-ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.17
-ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.17
-ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.17
-ghcr.io/bezverec/gigatiff-server:0.3.6
+ghcr.io/bezverec/gigatiff-kramerius-web-client:stack-0.1.18
+ghcr.io/bezverec/gigatiff-kramerius-auth-shim:stack-0.1.18
+ghcr.io/bezverec/gigatiff-kramerius-admin-client:stack-0.1.18
+ghcr.io/bezverec/gigatiff-kramerius-bootstrap:stack-0.1.18
+ghcr.io/bezverec/gigatiff-server:0.3.7
 ```
 
+The immutable index digests and image source revisions are recorded in
+[`releases/stack-0.1.18-images.json`](releases/stack-0.1.18-images.json).
+Use `image@sha256:...` from that manifest when pinning a deployment by digest.
+Attestation manifests may appear as `unknown/unknown` alongside the real
+`linux/amd64` manifest; they are SBOM/provenance records, not extra platforms.
+
 To publish them from GitHub Actions, run the `Publish GHCR Images` workflow or
-push a tag named like `stack-0.1.17`. The workflow reads `versions.toml`, checks
+push a tag named like `stack-0.1.18`. The workflow reads `versions.toml`, checks
 out the pinned admin client and GigaTIFF revisions, builds Linux `amd64` images,
 adds OCI metadata, and publishes SBOM/provenance attestations.
 
@@ -628,8 +634,8 @@ localhost/gigatiff-kramerius-bootstrap:clean
 gigatiff-server:local
 ```
 
-Versioned local tags use `stack-0.1.18` and server `0.3.7`; they do not exist
-on GHCR yet. Logs, Buildx metadata and `images.json` live under ignored
+Versioned local tags use `stack-0.1.18` and server `0.3.7`, matching the GHCR
+release versions. Logs, Buildx metadata and `images.json` live under ignored
 `.local-build/<timestamp>/`, including source revisions, dirty-worktree flags
 and image IDs. Select a subset with `-Components web-client,auth-shim`;
 use `-SkipPull` only when deliberately reusing already resolved base images.
@@ -678,8 +684,8 @@ host address and port configured by **Default Install**.
 Reuse the configuration steps in **Default Install**, then run the prepared
 runtime with `docker-compose.clean.yml` and `up -d --no-build`. Do not use the
 GHCR override for local candidate tags: its `pull_policy: always` deliberately
-requires published images. The last published tags and GHCR defaults stay at
-`stack-0.1.17` / `0.3.6` until publication is explicitly requested.
+requires published images. GHCR defaults now select the verified
+`stack-0.1.18` / `0.3.7` images.
 
 GigaTIFF's complete Linux test suite can also run locally without exporting a
 large builder image:
